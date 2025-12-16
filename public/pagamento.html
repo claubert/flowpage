@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamento - Flowhedge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-dark: #0a0f1c;
+      --secondary-dark: #111827;
+      --accent-blue: #2563eb;
+      --accent-teal: #0d9488;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --gradient-primary: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+      --gradient-accent: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--primary-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Gráfico de Fundo Animado */
+    .candlestick-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Header Moderno */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(10, 15, 28, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      padding: 1rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 4px;
+      height: 12px;
+      background: var(--text-primary);
+      position: absolute;
+      left: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-icon::after {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--text-primary);
+      position: absolute;
+      right: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Main Content */
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 8rem 2rem 4rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 2rem 0 3rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa, var(--accent-teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cards Modernos */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient-accent);
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-card);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(17, 24, 39, 0.6);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    select option {
+      background: var(--secondary-dark);
+      color: var(--text-primary);
+    }
+
+    /* Plan Options */
+    .plan-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .plan-option {
+      background: rgba(17, 24, 39, 0.4);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .plan-option:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .plan-option.selected {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.15);
+    }
+
+    .plan-option .plan-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .plan-option .plan-price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent-blue);
+    }
+
+    .plan-option .plan-period {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Buttons */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 1.25rem;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .button-primary {
+      background: var(--gradient-accent);
+      color: white;
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.3);
+    }
+
+    .button-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .button-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    .button-secondary:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .button i {
+      font-size: 1.2rem;
+    }
+
+    /* Message Box */
+    .message {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .message.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10b981;
+      display: flex;
+    }
+
+    .message.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      display: flex;
+    }
+
+    .message.warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #f59e0b;
+      display: flex;
+    }
+
+    /* Loading State */
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Payment Info */
+    .payment-info {
+      background: rgba(17, 24, 39, 0.4);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      border-left: 4px solid var(--accent-blue);
+    }
+
+    .payment-info h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .payment-info p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      main {
+        padding: 7rem 1rem 2rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      .plan-options {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Gráfico de Fundo -->
+  <div class="candlestick-bg" id="candlestick-bg"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="/" class="logo">
+        <div class="logo-icon"></div>
+        <div class="logo-text">Flowhedge</div>
+      </a>
+      <nav class="nav-links">
+        <a href="/index.html#sobre">Sobre</a>
+        <a href="/index.html#recursos">Recursos</a>
+        <a href="/index.html#planos">Planos</a>
+        <a href="/login.html" class="nav-cta">Área do Cliente</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero animate-fade-in">
+      <h1>Finalizar Assinatura</h1>
+      <p>Escolha seu plano e complete o pagamento para acessar todas as funcionalidades da plataforma</p>
+    </section>
+
+    <!-- Card de Assinatura -->
+    <div class="card animate-fade-in">
+      <div class="form-group">
+        <label for="plano">Selecione o Plano</label>
+        <select id="plano">
+          <option value="mensal">Plano Mensal - R$ 297/mês</option>
+          <option value="semestral">Plano Semestral - R$ 1.677 (R$ 279,50/mês)</option>
+          <option value="anual">Plano Anual - R$ 2.964 (R$ 247/mês)</option>
+        </select>
+      </div>
+
+      <div class="payment-info">
+        <h3><i class="fas fa-shield-alt"></i> Pagamento Seguro</h3>
+        <p>Todas as transações são processadas de forma segura com criptografia de 256-bit. Não armazenamos dados do seu cartão.</p>
+      </div>
+
+      <div class="form-group">
+        <button onclick="assinar()" class="button button-primary">
+          <i class="fas fa-lock"></i> Assinar Agora
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Processando sua assinatura...</p>
+      </div>
+
+      <!-- Message Box -->
+      <div class="message" id="message"></div>
+
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <a href="/index.html#planos" class="button button-secondary">
+          <i class="fas fa-arrow-left"></i> Voltar para Planos
+        </a>
+      </div>
+    </div>
+
+    <!-- Detalhes do Plano -->
+    <div class="card animate-fade-in" style="animation-delay: 0.2s;">
+      <h2><i class="fas fa-check-circle"></i> O que você recebe</h2>
+      <ul style="list-style: none; margin-top: 1.5rem;">
+        <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fas fa-check" style="color: var(--accent-green);"></i>
+          <span>Acesso completo à plataforma de pair trading</span>
+        </li>
+        <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fas fa-check" style="color: var(--accent-green);"></i>
+          <span>Alertas em tempo real dos pares selecionados</span>
+        </li>
+        <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fas fa-check" style="color: var(--accent-green);"></i>
+          <span>Suporte técnico prioritário</span>
+        </li>
+        <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fas fa-check" style="color: var(--accent-green);"></i>
+          <span>Relatórios detalhados de performance</span>
+        </li>
+        <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+          <i class="fas fa-check" style="color: var(--accent-green);"></i>
+          <span>Atualizações contínuas da estratégia</span>
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    // Simulação de gráfico candlestick no fundo (mesmo do index.html)
+    function createCandlestickBackground() {
+      const container = document.getElementById('candlestick-bg');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      container.appendChild(canvas);
+      
+      const candles = [];
+      const candleWidth = 12;
+      const candleSpacing = 6;
+      const numCandles = Math.ceil(canvas.width / (candleWidth + candleSpacing));
+      
+      // Gerar candles aleatórios
+      for (let i = 0; i < numCandles * 3; i++) {
+        const open = Math.random() * 80 + 10;
+        const close = open + (Math.random() * 40 - 20);
+        const high = Math.max(open, close) + Math.random() * 10;
+        const low = Math.min(open, close) - Math.random() * 10;
+        
+        candles.push({
+          x: i * (candleWidth + candleSpacing),
+          open: open,
+          close: close,
+          high: high,
+          low: low,
+          color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+        });
+      }
+      
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Desenhar linha de tendência
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        for (let i = 0; i < 100; i++) {
+          const x = (i / 100) * canvas.width;
+          const y = canvas.height / 2 + Math.sin(i * 0.1) * 100;
+          ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Desenhar candles
+        candles.forEach(candle => {
+          // Sombra
+          ctx.beginPath();
+          ctx.moveTo(candle.x + candleWidth / 2, candle.high);
+          ctx.lineTo(candle.x + candleWidth / 2, candle.low);
+          ctx.strokeStyle = candle.color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
+          // Corpo
+          const bodyTop = Math.min(candle.open, candle.close);
+          const bodyHeight = Math.abs(candle.close - candle.open);
+          
+          ctx.fillStyle = candle.color;
+          ctx.fillRect(
+            candle.x,
+            bodyTop,
+            candleWidth,
+            Math.max(bodyHeight, 1)
+          );
+          
+          // Mover candles para esquerda
+          candle.x -= 0.3;
+        });
+        
+        // Remover candles que saíram da tela
+        while (candles.length > 0 && candles[0].x + candleWidth < 0) {
+          candles.shift();
+          
+          // Adicionar novo candle à direita
+          const lastCandle = candles[candles.length - 1];
+          const open = lastCandle.close;
+          const close = open + (Math.random() * 40 - 20);
+          const high = Math.max(open, close) + Math.random() * 10;
+          const low = Math.min(open, close) - Math.random() * 10;
+          
+          candles.push({
+            x: lastCandle.x + (candleWidth + candleSpacing),
+            open: open,
+            close: close,
+            high: high,
+            low: low,
+            color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+          });
+        }
+        
+        requestAnimationFrame(draw);
+      }
+      
+      draw();
+      
+      // Redimensionar canvas quando a janela mudar de tamanho
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+    
+    // Iniciar quando a página carregar
+    document.addEventListener('DOMContentLoaded', createCandlestickBackground);
+    
+    // Função de assinatura aprimorada
+    // Pré-selecionar plano via querystring
+    (function preselect(){
+      const u = new URLSearchParams(location.search);
+      const plano = u.get('plano');
+      if (plano) {
+        const sel = document.getElementById('plano');
+        if ([...sel.options].some(o=>o.value===plano)) sel.value = plano;
+      }
+    })();
+
+    async function assinar() {
+      const token = localStorage.getItem('token');
+      const message = document.getElementById('message');
+      const loading = document.getElementById('loading');
+      const planoSelect = document.getElementById('plano');
+      
+      // Reset message
+      message.className = 'message';
+      message.style.display = 'none';
+      
+      // Verificar login
+      if (!token) {
+        message.className = 'message error';
+        message.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Faça login primeiro para continuar';
+        message.style.display = 'flex';
+        return;
+      }
+      
+      // Mostrar loading
+      loading.style.display = 'block';
+      
+      // Simular delay de rede
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const codigo_plano = planoSelect.value;
+      
+      try {
+        // Enviar requisição para o servidor
+        const response = await fetch('/assinar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ codigo_plano })
+        });
+        
+        const data = await response.json();
+        
+        // Esconder loading
+        loading.style.display = 'none';
+        
+        if (response.ok && data.assinatura_id) {
+          message.className = 'message success';
+          message.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <div>
+              <strong>Assinatura criada com sucesso!</strong><br>
+              ID: ${data.assinatura_id}<br>
+              <small>Avançando para confirmação de pagamento...</small>
+            </div>
+          `;
+          message.style.display = 'flex';
+          localStorage.setItem('assinatura_id', String(data.assinatura_id));
+          window.location.href = '/confirmacao.html?assinatura_id='+data.assinatura_id;
+        } else {
+          message.className = 'message error';
+          message.innerHTML = `<i class="fas fa-times-circle"></i> Falha na assinatura: ${data.error || 'Erro desconhecido'}`;
+          message.style.display = 'flex';
+        }
+      } catch (error) {
+        // Esconder loading
+        loading.style.display = 'none';
+        
+        message.className = 'message error';
+        message.innerHTML = `<i class="fas fa-times-circle"></i> Erro de conexão: ${error.message}`;
+        message.style.display = 'flex';
+      }
+    }
+    
+    // Smooth scroll para links âncora
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 100,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+    
+    // Verificar se usuário está logado
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        const message = document.getElementById('message');
+        message.className = 'message warning';
+        message.innerHTML = '<i class="fas fa-info-circle"></i> Você precisa fazer login para assinar um plano';
+        message.style.display = 'flex';
+      }
+    });
+    
+    // Adicionar animação de scroll
+    const observerOptions = {
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    // Observar elementos para animação
+    document.querySelectorAll('.card').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

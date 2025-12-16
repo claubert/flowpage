@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • Flowhedge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-dark: #0a0f1c;
+      --secondary-dark: #111827;
+      --accent-blue: #2563eb;
+      --accent-teal: #0d9488;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --gradient-primary: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+      --gradient-accent: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--primary-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Gráfico de Fundo Animado */
+    .candlestick-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    /* Header Moderno */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(10, 15, 28, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      padding: 1rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 4px;
+      height: 12px;
+      background: var(--text-primary);
+      position: absolute;
+      left: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-icon::after {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--text-primary);
+      position: absolute;
+      right: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Main Content - Layout de Login */
+    .login-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem 4rem;
+      min-height: 100vh;
+    }
+
+    .login-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 4rem;
+      max-width: 1200px;
+      width: 100%;
+      align-items: center;
+    }
+
+    /* Left Side - Branding */
+    .login-branding {
+      padding-right: 2rem;
+    }
+
+    .login-branding h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa, var(--accent-teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-branding p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-top: 2rem;
+    }
+
+    .features-list li {
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .features-list li i {
+      color: var(--accent-green);
+      font-size: 1.2rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Right Side - Login Card */
+    .login-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+      max-width: 480px;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient-accent);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .login-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .login-header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .input-field {
+      position: relative;
+    }
+
+    .input-field i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      z-index: 1;
+    }
+
+    .input-field input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      background: rgba(10, 15, 28, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-field input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .input-field input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0;
+    }
+
+    .password-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    .options-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .remember-me input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      accent-color: var(--accent-blue);
+    }
+
+    .forgot-password {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-password:hover {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 1rem;
+      background: var(--gradient-accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .login-button.loading {
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+
+    .login-button.loading i {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 2rem 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-color);
+    }
+
+    .divider span {
+      padding: 0 1rem;
+    }
+
+    .social-login {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .social-button {
+      padding: 0.875rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: rgba(10, 15, 28, 0.7);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .social-button:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .social-button.google i {
+      color: #ea4335;
+    }
+
+    .social-button.github i {
+      color: var(--text-primary);
+    }
+
+    .register-link {
+      text-align: center;
+      margin-top: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .register-link a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    #msg {
+      text-align: center;
+      margin-top: 1.5rem;
+      min-height: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .msg-success {
+      color: var(--accent-green);
+    }
+
+    .msg-error {
+      color: var(--accent-red);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--secondary-dark);
+      border-top: 1px solid var(--border-color);
+      padding: 2rem;
+      margin-top: auto;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 992px) {
+      .login-wrapper {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        max-width: 600px;
+      }
+
+      .login-branding {
+        padding-right: 0;
+        text-align: center;
+      }
+
+      .login-branding h1 {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .login-container {
+        padding: 10rem 1rem 4rem;
+      }
+
+      .login-card {
+        padding: 2rem;
+      }
+
+      .social-login {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-branding h1 {
+        font-size: 2rem;
+      }
+
+      .options-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .forgot-password {
+        align-self: flex-end;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Gráfico de Fundo -->
+  <div class="candlestick-bg" id="candlestick-bg"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="/" class="logo">
+        <div class="logo-icon"></div>
+        <div class="logo-text">Flowhedge</div>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/pagamento.html">Pagamento</a>
+        <a href="/login.html" class="nav-cta">Área do Cliente</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="login-container">
+    <div class="login-wrapper">
+      <!-- Left Side - Branding -->
+      <div class="login-branding animate-fade-in">
+        <h1>Acesso ao Dashboard Quantitativo</h1>
+        <p>Entre na plataforma profissional de pair trading para acessar análises estatísticas avançadas, execução automatizada e relatórios detalhados.</p>
+        
+        <ul class="features-list">
+          <li>
+            <i class="fas fa-chart-line"></i>
+            <div>
+              <strong>Análises em Tempo Real</strong>
+              <p>Acompanhe o desempenho de seus pares em tempo real</p>
+            </div>
+          </li>
+          <li>
+            <i class="fas fa-robot"></i>
+            <div>
+              <strong>Automação Inteligente</strong>
+              <p>Execução automática baseada em modelos quantitativos</p>
+            </div>
+          </li>
+          <li>
+            <i class="fas fa-shield-alt"></i>
+            <div>
+              <strong>Segurança Avançada</strong>
+              <p>Autenticação de múltiplos fatores e criptografia ponta a ponta</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Right Side - Login Form -->
+      <div class="login-card animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="login-header">
+          <h2>Entrar na Conta</h2>
+          <p>Use suas credenciais para acessar o dashboard</p>
+        </div>
+
+        <form id="loginForm">
+          <div class="input-group">
+            <label for="email">E-mail</label>
+            <div class="input-field">
+              <i class="fas fa-envelope"></i>
+              <input 
+                type="email" 
+                id="email" 
+                placeholder="seu@email.com" 
+                required
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="senha">Senha</label>
+            <div class="input-field">
+              <i class="fas fa-lock"></i>
+              <input 
+                type="password" 
+                id="senha" 
+                placeholder="Sua senha" 
+                required
+              />
+              <button type="button" class="password-toggle" id="togglePassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="options-row">
+            <label class="remember-me">
+              <input type="checkbox" id="remember">
+              <span>Lembrar-me</span>
+            </label>
+            <a href="#" class="forgot-password">Esqueceu a senha?</a>
+          </div>
+
+          <button type="submit" class="login-button" id="loginButton">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Entrar na Conta</span>
+          </button>
+        </form>
+
+        <div class="divider">
+          <span>Ou continue com</span>
+        </div>
+
+        <div class="social-login">
+          <button type="button" class="social-button google">
+            <i class="fab fa-google"></i>
+            <span>Google</span>
+          </button>
+          <button type="button" class="social-button github">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+          </button>
+        </div>
+
+        <div class="register-link">
+          Não tem uma conta? 
+          <a href="/pagamento.html">Comece agora mesmo</a>
+        </div>
+
+        <div id="msg"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <p>&copy; 2024 Flowhedge. Plataforma profissional de pair trading quantitativo.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+        As operações no mercado financeiro envolvem riscos de perda.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Simulação de gráfico candlestick no fundo (simplificada)
+    function createCandlestickBackground() {
+      const container = document.getElementById('candlestick-bg');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      container.appendChild(canvas);
+      
+      const candles = [];
+      const candleWidth = 8;
+      const candleSpacing = 4;
+      const numCandles = Math.ceil(canvas.width / (candleWidth + candleSpacing));
+      
+      // Gerar candles aleatórios
+      for (let i = 0; i < numCandles * 2; i++) {
+        const open = Math.random() * 60 + 20;
+        const close = open + (Math.random() * 30 - 15);
+        const high = Math.max(open, close) + Math.random() * 8;
+        const low = Math.min(open, close) - Math.random() * 8;
+        
+        candles.push({
+          x: i * (candleWidth + candleSpacing),
+          open: open,
+          close: close,
+          high: high,
+          low: low,
+          color: close >= open ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+        });
+      }
+      
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Desenhar candles
+        candles.forEach(candle => {
+          // Sombra
+          ctx.beginPath();
+          ctx.moveTo(candle.x + candleWidth / 2, candle.high);
+          ctx.lineTo(candle.x + candleWidth / 2, candle.low);
+          ctx.strokeStyle = candle.color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
+          // Corpo
+          const bodyTop = Math.min(candle.open, candle.close);
+          const bodyHeight = Math.abs(candle.close - candle.open);
+          
+          ctx.fillStyle = candle.color;
+          ctx.fillRect(
+            candle.x,
+            bodyTop,
+            candleWidth,
+            Math.max(bodyHeight, 1)
+          );
+          
+          // Mover candles para esquerda
+          candle.x -= 0.2;
+        });
+        
+        // Remover candles que saíram da tela
+        while (candles.length > 0 && candles[0].x + candleWidth < 0) {
+          candles.shift();
+          
+          // Adicionar novo candle à direita
+          const lastCandle = candles[candles.length - 1];
+          const open = lastCandle.close;
+          const close = open + (Math.random() * 30 - 15);
+          const high = Math.max(open, close) + Math.random() * 8;
+          const low = Math.min(open, close) - Math.random() * 8;
+          
+          candles.push({
+            x: lastCandle.x + (candleWidth + candleSpacing),
+            open: open,
+            close: close,
+            high: high,
+            low: low,
+            color: close >= open ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+          });
+        }
+        
+        requestAnimationFrame(draw);
+      }
+      
+      draw();
+      
+      // Redimensionar canvas quando a janela mudar de tamanho
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+    
+    // Iniciar quando a página carregar
+    document.addEventListener('DOMContentLoaded', createCandlestickBackground);
+    
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('senha');
+      const icon = this.querySelector('i');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+    
+    // Form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const button = document.getElementById('loginButton');
+      const msg = document.getElementById('msg');
+      
+      // Show loading state
+      button.classList.add('loading');
+      button.innerHTML = '<i class="fas fa-spinner"></i><span>Entrando...</span>';
+      msg.textContent = '';
+      msg.className = '';
+      
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const response = await fetch('/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, senha })
+        });
+        
+        const data = await response.json();
+        
+        if (data.token) {
+          // Success
+          localStorage.setItem('token', data.token);
+          
+          msg.textContent = 'Login realizado com sucesso! Redirecionando...';
+          msg.className = 'msg-success';
+          
+          // Remember me
+          if (document.getElementById('remember').checked) {
+            localStorage.setItem('rememberedEmail', email);
+          }
+          
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = '/painel.html';
+          }, 1000);
+        } else {
+          // Error
+          throw new Error(data.error || 'Falha no login');
+        }
+      } catch (error) {
+        // Reset button
+        button.classList.remove('loading');
+        button.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>Entrar na Conta</span>';
+        
+        // Show error message
+        msg.textContent = error.message || 'Erro ao realizar login. Verifique suas credenciais.';
+        msg.className = 'msg-error';
+        
+        // Shake animation on error
+        button.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          button.style.animation = '';
+        }, 500);
+      }
+    });
+    
+    // Social login buttons
+    document.querySelectorAll('.social-button').forEach(button => {
+      button.addEventListener('click', function() {
+        const provider = this.classList.contains('google') ? 'Google' : 'GitHub';
+        const msg = document.getElementById('msg');
+        
+        msg.textContent = `Redirecionando para login com ${provider}...`;
+        msg.className = 'msg-success';
+        
+        // Simulate social login redirect
+        setTimeout(() => {
+          msg.textContent = `Funcionalidade ${provider} em desenvolvimento`;
+          msg.className = 'msg-error';
+        }, 1500);
+      });
+    });
+    
+    // Fill remembered email if exists
+    window.addEventListener('load', function() {
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      if (rememberedEmail) {
+        document.getElementById('email').value = rememberedEmail;
+        document.getElementById('remember').checked = true;
+      }
+    });
+    
+    // Add shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

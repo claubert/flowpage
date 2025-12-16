@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flowhedge • Plataforma de Pair Trading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-dark: #0a0f1c;
+      --secondary-dark: #111827;
+      --accent-blue: #2563eb;
+      --accent-teal: #0d9488;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --gradient-primary: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+      --gradient-accent: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--primary-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Gráfico de Fundo Animado */
+    .candlestick-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Header Moderno */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(10, 15, 28, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      padding: 1rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 4px;
+      height: 12px;
+      background: var(--text-primary);
+      position: absolute;
+      left: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-icon::after {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--text-primary);
+      position: absolute;
+      right: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Main Content */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 4rem 0;
+      margin-bottom: 4rem;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa, var(--accent-teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .cta-primary {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .cta-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(37, 99, 235, 0.4);
+    }
+
+    .cta-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: 2px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .cta-secondary:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    /* Cards Modernos */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-bottom: 4rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.5s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-card);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(37, 99, 235, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      color: var(--accent-blue);
+      font-size: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Features List */
+    .features-list {
+      list-style: none;
+      margin-top: 1.5rem;
+    }
+
+    .features-list li {
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .features-list li i {
+      color: var(--accent-green);
+    }
+
+    /* Plans Section */
+    .plans-section {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .plans-section h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .plans-section p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .plan-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: left;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .plan-card.featured {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 40px rgba(37, 99, 235, 0.2);
+      transform: scale(1.05);
+    }
+
+    .plan-card.featured .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient-accent);
+      color: white;
+      padding: 0.5rem 1.5rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .plan-name {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .plan-price {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .plan-price span {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .plan-features {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .plan-features li {
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .plan-features li i {
+      color: var(--accent-green);
+    }
+
+    .plan-button {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .plan-button.primary {
+      background: var(--gradient-accent);
+      color: white;
+    }
+
+    .plan-button.secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    /* Stats Section */
+    .stats-section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 3rem;
+      margin-bottom: 4rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .stat-item h3 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-item p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--secondary-dark);
+      border-top: 1px solid var(--border-color);
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+
+    .footer-section h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent-blue);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .social-links a {
+      width: 40px;
+      height: 40px;
+      background: var(--card-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-links a:hover {
+      background: var(--accent-blue);
+      color: white;
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plan-card.featured {
+        transform: none;
+      }
+
+      main {
+        padding: 8rem 1rem 2rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Gráfico de Fundo -->
+  <div class="candlestick-bg" id="candlestick-bg"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="/" class="logo">
+        <div class="logo-icon"></div>
+        <div class="logo-text">Flowhedge</div>
+      </a>
+      <nav class="nav-links">
+        <a href="#sobre">Sobre</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#planos">Planos</a>
+        <a href="#contato">Contato</a>
+        <a href="/login.html" class="nav-cta">Área do Cliente</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero animate-fade-in">
+      <h1>Estratégia Quantitativa de Long & Short</h1>
+      <p>Operações automatizadas com modelos estatísticos avançados, disciplina operacional e controle de risco preciso.</p>
+      <div class="hero-cta">
+        <a href="/planos.html" class="cta-primary">Começar Agora</a>
+        <a href="#recursos" class="cta-secondary">Saiba Mais</a>
+      </div>
+    </section>
+
+    <!-- Sobre -->
+    <section id="sobre" class="card animate-fade-in">
+      <div class="card-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <h2>O que é Pair Trading?</h2>
+      <p>Abertura simultânea de posições compradas e vendidas em ativos correlacionados para reduzir risco direcional e capturar distorções temporárias no mercado.</p>
+      <ul class="features-list">
+        <li><i class="fas fa-check-circle"></i> Neutralidade de mercado</li>
+        <li><i class="fas fa-check-circle"></i> Exposição controlada</li>
+        <li><i class="fas fa-check-circle"></i> Retornos consistentes</li>
+        <li><i class="fas fa-check-circle"></i> Baixa correlação com índices</li>
+      </ul>
+    </section>
+
+    <!-- Recursos -->
+    <section id="recursos">
+      <h2 class="animate-fade-in" style="text-align: center; margin-bottom: 3rem; font-size: 2.5rem;">Benefícios Exclusivos</h2>
+      <div class="card-grid">
+        <div class="card animate-fade-in">
+          <div class="card-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+          <h2>Análise Quantitativa</h2>
+          <p>Modelos estatísticos avançados para identificação de pares cointegrados com alta probabilidade de sucesso.</p>
+          <ul class="features-list">
+            <li><i class="fas fa-check"></i> Cointegração Johansen</li>
+            <li><i class="fas fa-check"></i> Análise de correlação</li>
+            <li><i class="fas fa-check"></i> Testes de estacionariedade</li>
+          </ul>
+        </div>
+
+        <div class="card animate-fade-in" style="animation-delay: 0.2s;">
+          <div class="card-icon">
+            <i class="fas fa-robot"></i>
+          </div>
+          <h2>Automação Inteligente</h2>
+          <p>Sistema automatizado de execução com gestão de risco integrada e monitoramento em tempo real.</p>
+          <ul class="features-list">
+            <li><i class="fas fa-check"></i> Execução automática</li>
+            <li><i class="fas fa-check"></i> Stop loss dinâmico</li>
+            <li><i class="fas fa-check"></i> Rebalanceamento automático</li>
+          </ul>
+        </div>
+
+        <div class="card animate-fade-in" style="animation-delay: 0.4s;">
+          <div class="card-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h2>Gestão de Risco</h2>
+          <p>Controle rigoroso de exposição com múltiplas camadas de proteção e limites operacionais.</p>
+          <ul class="features-list">
+            <li><i class="fas fa-check"></i> Value at Risk (VaR)</li>
+            <li><i class="fas fa-check"></i> Limites de drawdown</li>
+            <li><i class="fas fa-check"></i> Diversificação otimizada</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Estatísticas -->
+    <section class="stats-section animate-fade-in">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3>99.8%</h3>
+          <p>Uptime do Sistema</p>
+        </div>
+        <div class="stat-item">
+          <h3>24/7</h3>
+          <p>Monitoramento</p>
+        </div>
+        <div class="stat-item">
+          <h3>+2.5%</h3>
+          <p>Retorno Mensal Médio</p>
+        </div>
+        <div class="stat-item">
+          <h3>&lt;0.8</h3>
+          <p>Sharpe Ratio</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planos -->
+    <section id="planos" class="plans-section">
+      <h2 class="animate-fade-in">Planos de Assinatura</h2>
+      <p class="animate-fade-in">Escolha o plano ideal para suas necessidades de trading</p>
+      <div class="plans-grid">
+        <div class="plan-card animate-fade-in">
+          <div class="plan-name">Básico</div>
+          <div class="plan-price">R$ 297<span>/mês</span></div>
+          <ul class="plan-features">
+            <li><i class="fas fa-check"></i> 5 pares de ativos</li>
+            <li><i class="fas fa-check"></i> Alertas por email</li>
+            <li><i class="fas fa-check"></i> Suporte básico</li>
+            <li><i class="fas fa-check"></i> Relatórios semanais</li>
+          </ul>
+          <button class="plan-button secondary" data-plano="mensal" aria-label="Escolher Plano Mensal">Escolher Plano</button>
+        </div>
+
+        <div class="plan-card featured animate-fade-in" style="animation-delay: 0.2s;">
+          <div class="plan-badge">Mais Popular</div>
+          <div class="plan-name">Profissional</div>
+          <div class="plan-price">R$ 697<span>/mês</span></div>
+          <ul class="plan-features">
+            <li><i class="fas fa-check"></i> 15 pares de ativos</li>
+            <li><i class="fas fa-check"></i> Alertas em tempo real</li>
+            <li><i class="fas fa-check"></i> Suporte prioritário</li>
+            <li><i class="fas fa-check"></i> Relatórios diários</li>
+            <li><i class="fas fa-check"></i> Backtesting personalizado</li>
+          </ul>
+          <button class="plan-button primary" data-plano="semestral" aria-label="Escolher Plano Semestral">Escolher Plano</button>
+        </div>
+
+        <div class="plan-card animate-fade-in" style="animation-delay: 0.4s;">
+          <div class="plan-name">Institucional</div>
+          <div class="plan-price">R$ 1.997<span>/mês</span></div>
+          <ul class="plan-features">
+            <li><i class="fas fa-check"></i> Pairs ilimitados</li>
+            <li><i class="fas fa-check"></i> API completa</li>
+            <li><i class="fas fa-check"></i> Suporte dedicado 24/7</li>
+            <li><i class="fas fa-check"></i> Relatórios customizados</li>
+            <li><i class="fas fa-check"></i> White label disponível</li>
+          </ul>
+          <button class="plan-button secondary" id="btn-vendas" aria-label="Falar com Vendas">Falar com Vendas</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Flowhedge</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Plataforma profissional de pair trading quantitativo para traders institucionais e sofisticados.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-linkedin"></i></a>
+          <a href="#"><i class="fab fa-telegram"></i></a>
+          <a href="#"><i class="fab fa-github"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-section">
+        <h4>Links Rápidos</h4>
+        <ul class="footer-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/pagamento.html">Pagamento</a></li>
+          <li><a href="/login.html">Login</a></li>
+          <li><a href="#planos">Planos</a></li>
+          <li><a href="#contato">Contato</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Legal</h4>
+        <ul class="footer-links">
+          <li><a href="#">Termos de Uso</a></li>
+          <li><a href="#">Política de Privacidade</a></li>
+          <li><a href="#">Risco e Responsabilidade</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h4>Contato</h4>
+        <ul class="footer-links">
+          <li><i class="fas fa-envelope"></i> contato@flowhedge.com</li>
+          <li><i class="fas fa-phone"></i> (11) 99999-9999</li>
+          <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>
+        </ul>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2024 Flowhedge. Todos os direitos reservados. As operações no mercado financeiro envolvem riscos de perda.
+    </div>
+  </footer>
+
+  <script>
+    // Simulação de gráfico candlestick no fundo
+    function createCandlestickBackground() {
+      const container = document.getElementById('candlestick-bg');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      container.appendChild(canvas);
+      
+      const candles = [];
+      const candleWidth = 12;
+      const candleSpacing = 6;
+      const numCandles = Math.ceil(canvas.width / (candleWidth + candleSpacing));
+      
+      // Gerar candles aleatórios
+      for (let i = 0; i < numCandles * 3; i++) {
+        const open = Math.random() * 80 + 10;
+        const close = open + (Math.random() * 40 - 20);
+        const high = Math.max(open, close) + Math.random() * 10;
+        const low = Math.min(open, close) - Math.random() * 10;
+        
+        candles.push({
+          x: i * (candleWidth + candleSpacing),
+          open: open,
+          close: close,
+          high: high,
+          low: low,
+          color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+        });
+      }
+      
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Desenhar linha de tendência
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        for (let i = 0; i < 100; i++) {
+          const x = (i / 100) * canvas.width;
+          const y = canvas.height / 2 + Math.sin(i * 0.1) * 100;
+          ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Desenhar candles
+        candles.forEach(candle => {
+          // Sombra
+          ctx.beginPath();
+          ctx.moveTo(candle.x + candleWidth / 2, candle.high);
+          ctx.lineTo(candle.x + candleWidth / 2, candle.low);
+          ctx.strokeStyle = candle.color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
+          // Corpo
+          const bodyTop = Math.min(candle.open, candle.close);
+          const bodyHeight = Math.abs(candle.close - candle.open);
+          
+          ctx.fillStyle = candle.color;
+          ctx.fillRect(
+            candle.x,
+            bodyTop,
+            candleWidth,
+            Math.max(bodyHeight, 1)
+          );
+          
+          // Mover candles para esquerda
+          candle.x -= 0.3;
+        });
+        
+        // Remover candles que saíram da tela
+        while (candles.length > 0 && candles[0].x + candleWidth < 0) {
+          candles.shift();
+          
+          // Adicionar novo candle à direita
+          const lastCandle = candles[candles.length - 1];
+          const open = lastCandle.close;
+          const close = open + (Math.random() * 40 - 20);
+          const high = Math.max(open, close) + Math.random() * 10;
+          const low = Math.min(open, close) - Math.random() * 10;
+          
+          candles.push({
+            x: lastCandle.x + (candleWidth + candleSpacing),
+            open: open,
+            close: close,
+            high: high,
+            low: low,
+            color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+          });
+        }
+        
+        requestAnimationFrame(draw);
+      }
+      
+      draw();
+      
+      // Redimensionar canvas quando a janela mudar de tamanho
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+    
+    // Iniciar quando a página carregar
+    document.addEventListener('DOMContentLoaded', createCandlestickBackground);
+    
+    // Smooth scroll para links âncora
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 100,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+    
+    // Adicionar animação de scroll
+    const observerOptions = {
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    // Observar elementos para animação
+    document.querySelectorAll('.card, .plan-card, .stats-section').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    // Interação dos botões "Escolher Plano"
+    function handlePlanClick(btn){
+      const plano = btn.getAttribute('data-plano');
+      if (!plano) return;
+      btn.setAttribute('aria-busy','true');
+      btn.classList.add('clicked');
+      setTimeout(()=>{
+        btn.classList.remove('clicked');
+        btn.removeAttribute('aria-busy');
+        window.location.href = '/pagamento.html?plano='+encodeURIComponent(plano);
+      }, 200);
+    }
+
+    document.querySelectorAll('.plan-button[data-plano]').forEach(btn => {
+      btn.addEventListener('click', () => handlePlanClick(btn));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePlanClick(btn); }
+      });
+    });
+
+    const vendas = document.getElementById('btn-vendas');
+    if (vendas) {
+      vendas.addEventListener('click', ()=>{ window.location.href = '#contato'; });
+    }
+  </script>
+</body>
+</html>

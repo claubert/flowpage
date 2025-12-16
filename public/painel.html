@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel do Cliente - Flowhedge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-dark: #0a0f1c;
+      --secondary-dark: #111827;
+      --accent-blue: #2563eb;
+      --accent-teal: #0d9488;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-orange: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --gradient-primary: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+      --gradient-accent: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--primary-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Gráfico de Fundo Animado */
+    .candlestick-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Header Moderno */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(10, 15, 28, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      padding: 1rem 2rem;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-icon::before {
+      content: '';
+      width: 4px;
+      height: 12px;
+      background: var(--text-primary);
+      position: absolute;
+      left: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-icon::after {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--text-primary);
+      position: absolute;
+      right: 10px;
+      border-radius: 2px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--text-primary), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 0;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      background: var(--gradient-accent);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Main Content */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 8rem 2rem 4rem;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Cards Modernos */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient-accent);
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-card);
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card h2 i {
+      color: var(--accent-blue);
+    }
+
+    /* Status Card */
+    .status-card {
+      grid-column: span 4;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-orange);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .plan-details {
+      margin-top: 1.5rem;
+    }
+
+    .plan-detail-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .plan-detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .plan-detail-label {
+      color: var(--text-secondary);
+    }
+
+    .plan-detail-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      grid-column: span 8;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .action-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(17, 24, 39, 0.4);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .action-button:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .action-button i {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--accent-blue);
+    }
+
+    .action-button span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Tabela de Pagamentos */
+    .payments-card {
+      grid-column: span 12;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 1rem;
+    }
+
+    th {
+      background: rgba(17, 24, 39, 0.6);
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-align: left;
+      padding: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .payment-status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status-paid {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-orange);
+    }
+
+    .status-failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+    }
+
+    /* Buttons */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .button-primary {
+      background: var(--gradient-accent);
+      color: white;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .button-danger {
+      background: var(--accent-red);
+      color: white;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .button-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .button-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    .button-secondary:hover {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-item {
+      background: rgba(17, 24, 39, 0.4);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-item .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-item .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+    }
+
+    /* Loading State */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+      .status-card,
+      .quick-actions {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      main {
+        padding: 7rem 1rem 2rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Gráfico de Fundo -->
+  <div class="candlestick-bg" id="candlestick-bg"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <a href="/" class="logo">
+        <div class="logo-icon"></div>
+        <div class="logo-text">Flowhedge</div>
+      </a>
+      <nav class="nav-links">
+        <a href="/index.html#sobre">Sobre</a>
+        <a href="/index.html#recursos">Recursos</a>
+        <a href="/index.html#planos">Planos</a>
+        <a href="/pagamento.html" class="nav-cta">Assinar Plano</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main>
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Status do Plano -->
+      <div class="card status-card animate-fade-in">
+        <h2><i class="fas fa-crown"></i> Status do Plano</h2>
+        <div id="status" class="plan-details">
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando informações...</p>
+          </div>
+        </div>
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <button onclick="sair()" class="button button-danger">
+            <i class="fas fa-sign-out-alt"></i> Sair da Conta
+          </button>
+          <a href="/pagamento.html" class="button button-primary">
+            <i class="fas fa-sync-alt"></i> Alterar Plano
+          </a>
+        </div>
+      </div>
+
+      <!-- Ações Rápidas -->
+      <div class="card quick-actions animate-fade-in" style="animation-delay: 0.1s;">
+        <h2><i class="fas fa-bolt"></i> Ações Rápidas</h2>
+        <div class="actions-grid">
+          <a href="/pagamento.html" class="action-button">
+            <i class="fas fa-credit-card"></i>
+            <span>Adicionar Método de Pagamento</span>
+          </a>
+          <a href="#" class="action-button" onclick="exportarDados()">
+            <i class="fas fa-download"></i>
+            <span>Exportar Dados</span>
+          </a>
+          <a href="#" class="action-button">
+            <i class="fas fa-file-invoice"></i>
+            <span>Solicitar Fatura</span>
+          </a>
+          <a href="#" class="action-button">
+            <i class="fas fa-headset"></i>
+            <span>Suporte</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Estatísticas -->
+      <div class="card animate-fade-in" style="animation-delay: 0.2s; grid-column: span 12;">
+        <h2><i class="fas fa-chart-bar"></i> Estatísticas da Conta</h2>
+        <div class="stats-grid" id="stats">
+          <div class="stat-item">
+            <div class="stat-value" id="total-payments">R$ 0,00</div>
+            <div class="stat-label">Total Investido</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="payment-count">0</div>
+            <div class="stat-label">Pagamentos Realizados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="account-age">0 dias</div>
+            <div class="stat-label">Tempo na Plataforma</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="next-billing">-</div>
+            <div class="stat-label">Próxima Cobrança</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico de Pagamentos -->
+      <div class="card payments-card animate-fade-in" style="animation-delay: 0.3s;">
+        <h2><i class="fas fa-history"></i> Histórico de Pagamentos</h2>
+        <div id="table-container">
+          <table id="tabela">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Método</th>
+                <th>Status</th>
+                <th>ID da Transação</th>
+              </tr>
+            </thead>
+            <tbody id="payments-body">
+              <!-- Dados serão carregados via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <div id="empty-payments" class="empty-state" style="display: none;">
+          <i class="fas fa-receipt"></i>
+          <h3>Nenhum pagamento encontrado</h3>
+          <p>Você ainda não realizou nenhum pagamento na plataforma.</p>
+          <a href="/pagamento.html" class="button button-primary" style="margin-top: 1rem;">
+            <i class="fas fa-plus"></i> Assinar Plano
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Simulação de gráfico candlestick no fundo
+    function createCandlestickBackground() {
+      const container = document.getElementById('candlestick-bg');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      container.appendChild(canvas);
+      
+      const candles = [];
+      const candleWidth = 12;
+      const candleSpacing = 6;
+      const numCandles = Math.ceil(canvas.width / (candleWidth + candleSpacing));
+      
+      for (let i = 0; i < numCandles * 3; i++) {
+        const open = Math.random() * 80 + 10;
+        const close = open + (Math.random() * 40 - 20);
+        const high = Math.max(open, close) + Math.random() * 10;
+        const low = Math.min(open, close) - Math.random() * 10;
+        
+        candles.push({
+          x: i * (candleWidth + candleSpacing),
+          open: open,
+          close: close,
+          high: high,
+          low: low,
+          color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+        });
+      }
+      
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Linha de tendência
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        for (let i = 0; i < 100; i++) {
+          const x = (i / 100) * canvas.width;
+          const y = canvas.height / 2 + Math.sin(i * 0.1) * 100;
+          ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Candles
+        candles.forEach(candle => {
+          // Sombra
+          ctx.beginPath();
+          ctx.moveTo(candle.x + candleWidth / 2, candle.high);
+          ctx.lineTo(candle.x + candleWidth / 2, candle.low);
+          ctx.strokeStyle = candle.color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
+          // Corpo
+          const bodyTop = Math.min(candle.open, candle.close);
+          const bodyHeight = Math.abs(candle.close - candle.open);
+          
+          ctx.fillStyle = candle.color;
+          ctx.fillRect(
+            candle.x,
+            bodyTop,
+            candleWidth,
+            Math.max(bodyHeight, 1)
+          );
+          
+          candle.x -= 0.3;
+        });
+        
+        while (candles.length > 0 && candles[0].x + candleWidth < 0) {
+          candles.shift();
+          
+          const lastCandle = candles[candles.length - 1];
+          const open = lastCandle.close;
+          const close = open + (Math.random() * 40 - 20);
+          const high = Math.max(open, close) + Math.random() * 10;
+          const low = Math.min(open, close) - Math.random() * 10;
+          
+          candles.push({
+            x: lastCandle.x + (candleWidth + candleSpacing),
+            open: open,
+            close: close,
+            high: high,
+            low: low,
+            color: close >= open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+          });
+        }
+        
+        requestAnimationFrame(draw);
+      }
+      
+      draw();
+      
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+    
+    // Iniciar gráfico de fundo
+    document.addEventListener('DOMContentLoaded', createCandlestickBackground);
+    
+    // Função para carregar dados do painel
+    async function carregar() {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        location.href = '/login.html';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/painel', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Falha ao carregar dados');
+        }
+        
+        const data = await response.json();
+        
+        // Atualizar status do plano
+        const statusDiv = document.getElementById('status');
+        if (data.assinatura) {
+          let statusClass = 'status-inactive';
+          if (data.assinatura.status === 'ativo') statusClass = 'status-active';
+          if (data.assinatura.status === 'pendente') statusClass = 'status-pending';
+          
+          const planoNome = data.assinatura.plano_nome || 'Plano Básico';
+          const valorMensal = data.assinatura.valor_mensal ? `R$ ${(data.assinatura.valor_mensal / 100).toFixed(2)}` : 'R$ 297,00';
+          const dataExpiracao = data.assinatura.data_expiracao ? new Date(data.assinatura.data_expiracao).toLocaleDateString('pt-BR') : 'N/A';
+          const dataRenovacao = data.assinatura.data_renovacao ? new Date(data.assinatura.data_renovacao).toLocaleDateString('pt-BR') : 'N/A';
+          
+          statusDiv.innerHTML = `
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Plano:</span>
+              <span class="plan-detail-value">${planoNome}</span>
+            </div>
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Status:</span>
+              <span class="status-badge ${statusClass}">${data.assinatura.status.toUpperCase()}</span>
+            </div>
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Valor Mensal:</span>
+              <span class="plan-detail-value">${valorMensal}</span>
+            </div>
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Expira em:</span>
+              <span class="plan-detail-value">${dataExpiracao}</span>
+            </div>
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Renova em:</span>
+              <span class="plan-detail-value">${dataRenovacao}</span>
+            </div>
+          `;
+          
+          // Atualizar próximo vencimento nas estatísticas
+          if (data.assinatura.data_renovacao) {
+            document.getElementById('next-billing').textContent = dataRenovacao;
+          }
+        } else {
+          statusDiv.innerHTML = `
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Status:</span>
+              <span class="status-badge status-inactive">SEM ASSINATURA</span>
+            </div>
+            <div class="plan-detail-item">
+              <span class="plan-detail-label">Ação:</span>
+              <span class="plan-detail-value">Assine um plano para começar</span>
+            </div>
+          `;
+        }
+        
+        // Atualizar estatísticas
+        if (data.pagamentos && data.pagamentos.length > 0) {
+          const total = data.pagamentos.reduce((sum, p) => sum + (p.valor_centavos || 0), 0);
+          const pagos = data.pagamentos.filter(p => p.status === 'pago' || p.status === 'paid');
+          
+          document.getElementById('total-payments').textContent = `R$ ${(total / 100).toFixed(2)}`;
+          document.getElementById('payment-count').textContent = pagos.length;
+          
+          // Calcular idade da conta (supondo que o primeiro pagamento seja a data de criação)
+          if (pagos.length > 0) {
+            const firstPayment = new Date(pagos[pagos.length - 1].pago_em || Date.now());
+            const today = new Date();
+            const diffTime = Math.abs(today - firstPayment);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('account-age').textContent = `${diffDays} dias`;
+          }
+        }
+        
+        // Atualizar tabela de pagamentos
+        const paymentsBody = document.getElementById('payments-body');
+        const emptyPayments = document.getElementById('empty-payments');
+        
+        if (data.pagamentos && data.pagamentos.length > 0) {
+          emptyPayments.style.display = 'none';
+          
+          paymentsBody.innerHTML = data.pagamentos.map(p => {
+            const valor = (p.valor_centavos / 100).toFixed(2);
+            const dataPagamento = p.pago_em ? new Date(p.pago_em).toLocaleDateString('pt-BR') : 'N/A';
+            const metodo = p.metodo || 'Cartão de Crédito';
+            
+            let statusClass = 'status-pending';
+            let statusText = 'Pendente';
+            
+            if (p.status === 'pago' || p.status === 'paid') {
+              statusClass = 'status-paid';
+              statusText = 'Pago';
+            } else if (p.status === 'falhou' || p.status === 'failed') {
+              statusClass = 'status-failed';
+              statusText = 'Falhou';
+            }
+            
+            return `
+              <tr>
+                <td>${dataPagamento}</td>
+                <td>Assinatura ${data.assinatura?.plano_nome || 'Flowhedge'}</td>
+                <td>R$ ${valor}</td>
+                <td>${metodo}</td>
+                <td><span class="payment-status ${statusClass}">${statusText}</span></td>
+                <td><code style="color: var(--text-secondary);">${p.transacao_id || 'N/A'}</code></td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          paymentsBody.innerHTML = '';
+          emptyPayments.style.display = 'block';
+        }
+        
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = `
+          <div class="plan-detail-item">
+            <span class="plan-detail-label">Erro:</span>
+            <span class="plan-detail-value" style="color: var(--accent-red);">Falha ao carregar dados</span>
+          </div>
+        `;
+      }
+    }
+    
+    // Função para sair
+    async function sair() {
+      const token = localStorage.getItem('token');
+      
+      try {
+        await fetch('/logout', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+      } finally {
+        localStorage.removeItem('token');
+        location.href = '/';
+      }
+    }
+    
+    // Função para exportar dados
+    function exportarDados() {
+      // Simulação de exportação
+      alert('Funcionalidade de exportação em desenvolvimento. Em breve você poderá exportar seus dados.');
+    }
+    
+    // Smooth scroll para links âncora
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 100,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+    
+    // Adicionar animação de scroll
+    const observerOptions = {
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    // Observar elementos para animação
+    document.querySelectorAll('.card').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+    
+    // Carregar dados quando a página for carregada
+    document.addEventListener('DOMContentLoaded', carregar);
+  </script>
+</body>
+</html>

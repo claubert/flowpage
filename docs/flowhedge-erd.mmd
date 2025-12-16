@@ -1,0 +1,119 @@
+erDiagram
+  users {
+    bigint id PK
+    varchar name
+    varchar email
+    varbinary password_hash
+    datetime created_at
+    datetime updated_at
+    tinyint is_active
+  }
+  plans {
+    bigint id PK
+    varchar name
+    varchar code
+    enum billing_period
+    int price_cents
+    char currency
+    tinyint active
+    datetime created_at
+  }
+  subscriptions {
+    bigint id PK
+    bigint user_id FK
+    bigint plan_id FK
+    enum status
+    datetime starts_at
+    datetime ends_at
+    datetime next_charge_at
+    varchar gateway_customer_id
+    datetime created_at
+    datetime updated_at
+  }
+  payments {
+    bigint id PK
+    bigint subscription_id FK
+    int amount_cents
+    char currency
+    enum method
+    enum status
+    varchar external_id
+    datetime paid_at
+    datetime created_at
+  }
+  sessions {
+    bigint id PK
+    bigint user_id FK
+    char token
+    datetime created_at
+    datetime expires_at
+    datetime revoked_at
+    varchar ip
+    varchar user_agent
+  }
+  password_resets {
+    bigint id PK
+    bigint user_id FK
+    char token
+    datetime created_at
+    datetime expires_at
+    datetime used_at
+  }
+  notifications {
+    bigint id PK
+    bigint user_id FK
+    enum type
+    enum status
+    datetime sent_at
+    json metadata
+    datetime created_at
+  }
+  access_logs {
+    bigint id PK
+    bigint user_id FK
+    varchar action
+    tinyint success
+    varchar ip
+    varchar user_agent
+    datetime created_at
+  }
+  ls_strategies {
+    bigint id PK
+    varchar name
+    text description
+    tinyint active
+    datetime created_at
+  }
+  ls_signals {
+    bigint id PK
+    bigint strategy_id FK
+    varchar pair_code
+    varchar long_symbol
+    varchar short_symbol
+    decimal correlation
+    decimal zscore
+    enum state
+    datetime created_at
+    datetime closed_at
+  }
+  positions {
+    bigint id PK
+    bigint user_id FK
+    bigint signal_id FK
+    varchar long_symbol
+    varchar short_symbol
+    datetime opened_at
+    datetime closed_at
+    int pnl_cents
+  }
+
+  users ||--o{ subscriptions : ""
+  plans ||--o{ subscriptions : ""
+  subscriptions ||--o{ payments : ""
+  users ||--o{ sessions : ""
+  users ||--o{ password_resets : ""
+  users ||--o{ notifications : ""
+  users ||--o{ access_logs : ""
+  ls_strategies ||--o{ ls_signals : ""
+  users ||--o{ positions : ""
+  ls_signals ||--o{ positions : ""

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmar Pagamento • Flowhedge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;padding:0;background:#0b1220;color:#f4f7ff}
+    header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0e1628;border-bottom:1px solid #18233a}
+    nav a{color:#cfe2ff;text-decoration:none;margin-left:16px}
+    main{max-width:720px;margin:24px auto;padding:0 24px}
+    .card{background:#111a2e;border:1px solid #1d2a49;padding:16px;border-radius:10px}
+    select,input,button{width:100%;padding:10px;border-radius:8px;border:1px solid #1d2a49;background:#0e1628;color:#e6edff}
+    button{background:#22c55e;border:none;margin-top:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <div>Flowhedge</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/pagamento.html">Pagamento</a>
+      <a href="/login.html">Login</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Confirmação de Pagamento</h2>
+      <label>Método</label>
+      <select id="metodo"><option value="pix">PIX</option><option value="cartao_credito">Cartão de Crédito</option><option value="cartao_debito">Cartão de Débito</option></select>
+      <label>Valor (centavos)</label>
+      <input id="valor" value="29700" />
+      <button onclick="iniciar()">Iniciar Pagamento</button>
+      <p id="status"></p>
+    </div>
+  </main>
+  <script>
+    let assinaturaId=null;let externo=null;let poll=null;
+    function obterAssinatura(){const u=new URLSearchParams(location.search);return Number(u.get('assinatura_id')||localStorage.getItem('assinatura_id')||0)}
+    async function iniciar(){
+      const token=localStorage.getItem('token');
+      if(!token){document.getElementById('status').textContent='Faça login';return}
+      assinaturaId=obterAssinatura();
+      if(!assinaturaId){document.getElementById('status').textContent='Assinatura não encontrada';return}
+      const metodo=document.getElementById('metodo').value;
+      const valor=Number(document.getElementById('valor').value||0);
+      const r=await fetch('/pagamento/iniciar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({assinatura_id:assinaturaId,metodo,valor_centavos:valor})});
+      const j=await r.json();
+      if(j.id_externo){externo=j.id_externo;document.getElementById('status').textContent='Pagamento iniciado. Aguardando confirmação...';iniciarPoll();} else {document.getElementById('status').textContent='Falha ao iniciar pagamento'}
+    }
+    async function iniciarPoll(){
+      const token=localStorage.getItem('token');
+      clearInterval(poll);
+      poll=setInterval(async()=>{
+        const r=await fetch('/pagamento/status?assinatura_id='+assinaturaId,{headers:{'Authorization':'Bearer '+token}});
+        const j=await r.json();
+        const p=j.pagamento;
+        if(!p){return}
+        if(p.status==='pago'){document.getElementById('status').textContent='Pagamento confirmado. Acesso liberado.';clearInterval(poll);location.href='/painel.html';}
+        else if(p.status==='falhou'){document.getElementById('status').textContent='Pagamento falhou.';clearInterval(poll);} 
+        else {document.getElementById('status').textContent='Aguardando confirmação...';}
+      },2000);
+    }
+  </script>
+</body>
+</html>

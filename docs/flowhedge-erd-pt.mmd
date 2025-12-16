@@ -1,0 +1,119 @@
+erDiagram
+  usuarios {
+    bigint id PK
+    varchar nome
+    varchar email
+    varbinary senha_hash
+    datetime criado_em
+    datetime atualizado_em
+    tinyint ativo
+  }
+  planos {
+    bigint id PK
+    varchar nome
+    varchar codigo
+    enum periodo_cobranca
+    int preco_centavos
+    char moeda
+    tinyint ativo
+    datetime criado_em
+  }
+  assinaturas {
+    bigint id PK
+    bigint usuario_id FK
+    bigint plano_id FK
+    enum status
+    datetime inicio_em
+    datetime fim_em
+    datetime proxima_cobranca_em
+    varchar id_cliente_gateway
+    datetime criado_em
+    datetime atualizado_em
+  }
+  pagamentos {
+    bigint id PK
+    bigint assinatura_id FK
+    int valor_centavos
+    char moeda
+    enum metodo
+    enum status
+    varchar id_externo
+    datetime pago_em
+    datetime criado_em
+  }
+  sessoes {
+    bigint id PK
+    bigint usuario_id FK
+    char token
+    datetime criado_em
+    datetime expira_em
+    datetime revogada_em
+    varchar ip
+    varchar agente_usuario
+  }
+  recuperacoes_senha {
+    bigint id PK
+    bigint usuario_id FK
+    char token
+    datetime criado_em
+    datetime expira_em
+    datetime usado_em
+  }
+  notificacoes {
+    bigint id PK
+    bigint usuario_id FK
+    enum tipo
+    enum status
+    datetime enviado_em
+    json metadados
+    datetime criado_em
+  }
+  logs_acesso {
+    bigint id PK
+    bigint usuario_id FK
+    varchar acao
+    tinyint sucesso
+    varchar ip
+    varchar agente_usuario
+    datetime criado_em
+  }
+  estrategias_ls {
+    bigint id PK
+    varchar nome
+    text descricao
+    tinyint ativo
+    datetime criado_em
+  }
+  sinais_ls {
+    bigint id PK
+    bigint estrategia_id FK
+    varchar codigo_par
+    varchar simbolo_long
+    varchar simbolo_short
+    decimal correlacao
+    decimal zscore
+    enum estado
+    datetime criado_em
+    datetime fechado_em
+  }
+  posicoes {
+    bigint id PK
+    bigint usuario_id FK
+    bigint sinal_id FK
+    varchar simbolo_long
+    varchar simbolo_short
+    datetime aberta_em
+    datetime fechada_em
+    int pnl_centavos
+  }
+
+  usuarios ||--o{ assinaturas : ""
+  planos ||--o{ assinaturas : ""
+  assinaturas ||--o{ pagamentos : ""
+  usuarios ||--o{ sessoes : ""
+  usuarios ||--o{ recuperacoes_senha : ""
+  usuarios ||--o{ notificacoes : ""
+  usuarios ||--o{ logs_acesso : ""
+  estrategias_ls ||--o{ sinais_ls : ""
+  usuarios ||--o{ posicoes : ""
+  sinais_ls ||--o{ posicoes : ""

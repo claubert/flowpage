@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro • Flowhedge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;padding:0;background:#0b1220;color:#f4f7ff}
+    header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0e1628;border-bottom:1px solid #18233a}
+    nav a{color:#cfe2ff;text-decoration:none;margin-left:16px}
+    main{max-width:720px;margin:24px auto;padding:0 24px}
+    .card{background:#111a2e;border:1px solid #1d2a49;padding:16px;border-radius:10px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid .full{grid-column:1/-1}
+    input,button{width:100%;padding:10px;border-radius:8px;border:1px solid #1d2a49;background:#0e1628;color:#e6edff}
+    button{background:#3b82f6;border:none}
+    label{font-size:12px;color:#a9b4d9;margin-bottom:6px;display:block}
+    .row{margin-bottom:10px}
+    .terms{display:flex;gap:8px;align-items:center;margin-top:10px}
+    @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div>Flowhedge</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/pagamento.html">Pagamento</a>
+      <a href="/login.html">Login</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Primeiro Acesso</h2>
+      <div class="grid">
+        <div class="row full">
+          <label>Nome Completo</label>
+          <input id="nome" />
+        </div>
+        <div class="row">
+          <label>CPF</label>
+          <input id="cpf" placeholder="00000000000" />
+        </div>
+        <div class="row">
+          <label>Telefone</label>
+          <input id="telefone" placeholder="(00) 00000-0000" />
+        </div>
+        <div class="row">
+          <label>E-mail</label>
+          <input id="email" type="email" />
+        </div>
+        <div class="row">
+          <label>Login</label>
+          <input id="login" />
+        </div>
+        <div class="row">
+          <label>Senha</label>
+          <input id="senha" type="password" />
+        </div>
+        <div class="row">
+          <label>Confirmar Senha</label>
+          <input id="senha2" type="password" />
+        </div>
+      </div>
+      <label class="terms"><input type="checkbox" id="aceitar" /> Aceito os <a href="#" style="color:#93c5fd">termos de uso</a> e a <a href="#" style="color:#93c5fd">política de privacidade</a></label>
+      <button onclick="cadastrar()" style="margin-top:10px">Cadastrar</button>
+      <p id="msg"></p>
+    </div>
+  </main>
+  <script>
+    function validaSenha(s){return s.length>=8 && /[A-Za-z]/.test(s) && /\d/.test(s)}
+    function limpaCPF(v){return (v||'').replace(/\D/g,'')}
+    function validaCPF(c){c=limpaCPF(c);if(!c||c.length!==11||/^([0-9])\1*$/.test(c))return false;let s=0;for(let i=0;i<9;i++)s+=parseInt(c[i])*(10-i);let d1=(s*10)%11;if(d1===10)d1=0;if(d1!==parseInt(c[9]))return false;s=0;for(let i=0;i<10;i++)s+=parseInt(c[i])*(11-i);let d2=(s*10)%11;if(d2===10)d2=0;return d2===parseInt(c[10])}
+    async function cadastrar(){
+      const nome=document.getElementById('nome').value.trim();
+      const cpf=document.getElementById('cpf').value.trim();
+      const telefone=document.getElementById('telefone').value.trim();
+      const email=document.getElementById('email').value.trim();
+      const login=document.getElementById('login').value.trim();
+      const senha=document.getElementById('senha').value;
+      const senha2=document.getElementById('senha2').value;
+      const aceitar=document.getElementById('aceitar').checked;
+      const msg=document.getElementById('msg');
+      if(!nome||!cpf||!telefone||!email||!login||!senha||!senha2||!aceitar){msg.textContent='Preencha todos os campos e aceite os termos';return}
+      if(!validaCPF(cpf)){msg.textContent='CPF inválido';return}
+      if(!validaSenha(senha)){msg.textContent='Senha fraca';return}
+      if(senha!==senha2){msg.textContent='Senhas diferentes';return}
+      const r=await fetch('/cadastro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome_completo:nome,cpf,telefone,email,login,senha,aceitar_termos:aceitar})});
+      const j=await r.json();
+      if(j.usuario_id){
+        const emailContratante = localStorage.getItem('email_contratante');
+        if(emailContratante){
+          await fetch('/cadastro/vincular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailContratante})});
+        }
+        msg.textContent='Cadastro realizado. Agora faça login.';
+        setTimeout(()=>{location.href='/login.html'},1000)
+      } else {msg.textContent='Falha no cadastro'}
+    }
+  </script>
+</body>
+</html>

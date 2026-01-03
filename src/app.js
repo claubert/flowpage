@@ -15,6 +15,8 @@ const bdPool = mysql.createPool({
   connectionLimit: 10,
 });
 
+const adminKey = process.env.ADMIN_KEY || null;
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -65,6 +67,15 @@ function authMiddleware(req, res, next) {
     req.usuario = ctx.usuario;
     next();
   }).catch(() => res.status(500).json({ erro: "falha_autenticacao" }));
+}
+
+async function registrarErro(rota, mensagem, stack, status, ip, agente) {
+  try {
+    await bdPool.query(
+      "INSERT INTO `erros_sistema` (`rota`,`mensagem`,`stack`,`status_code`,`ip`,`user_agent`) VALUES (?,?,?,?,?,?)",
+      [rota || "", mensagem || "", stack || "", status || 500, ip || "", agente || ""]
+    );
+  } catch (e) {}
 }
 
 function validarEmail(v){return /.+@.+\..+/.test(v)}
@@ -334,18 +345,43 @@ app.get("/health", async (req, res) => {
     await bdPool.query("SELECT 1");
     res.json({ server: "ok", db: "ok" });
   } catch (e) {
-    res.status(500).json({ server: "ok", db: "erro" });
+    res.status(503).json({ server: "ok", db: "erro" });
+  }
+});
+
+app.get("/health/deep", async (req, res) => {
+  try {
+    await bdPool.query("SELECT 1");
+    const [er] = await bdPool.query("SELECT COUNT(*) AS c FROM `erros_sistema` WHERE `criado_em`> NOW() - INTERVAL 1 HOUR");
+    const [pp] = await bdPool.query("SELECT COUNT(*) AS c FROM `pagamentos` WHERE `status`='pendente' AND `criado_em`< NOW() - INTERVAL 1 HOUR");
+    res.json({ server: "ok", db: "ok", erros_ult_1h: er[0]?.c || 0, pagamentos_pendentes_1h: pp[0]?.c || 0 });
+  } catch (e) {
+    res.status(503).json({ server: "ok", db: "erro" });
   }
 });
 
 app.use(async (err, req, res, next) => {
   try {
-    await bdPool.query(
-      "INSERT INTO `erros_sistema` (`rota`,`mensagem`,`stack`,`status_code`,`ip`,`user_agent`) VALUES (?,?,?,?,?,?)",
-      [req.path||"", err?.message||"", err?.stack||"", 500, req.ip||"", req.headers["user-agent"]||""]
-    );
+    await registrarErro(req.path, err?.message, err?.stack, 500, req.ip, req.headers["user-agent"]);
   } catch(e) {}
   res.status(500).json({ erro: "falha_interna" });
+});
+
+process.on("unhandledRejection", async (reason) => {
+  const msg = typeof reason === "object" && reason && "message" in reason ? reason.message : String(reason);
+  const st = typeof reason === "object" && reason && "stack" in reason ? reason.stack : "";
+  await registrarErro("", msg, st, 500, "", "");
+});
+
+process.on("uncaughtException", async (err) => {
+  await registrarErro("", err?.message, err?.stack, 500, "", "");
+});
+
+app.get("/admin/erros", async (req, res) => {
+  const k = req.headers["x-admin-key"] || req.headers["X-Admin-Key"] || null;
+  if (!adminKey || !k || k !== adminKey) return res.status(403).json({ erro: "negado" });
+  const [rows] = await bdPool.query("SELECT `id`,`rota`,`mensagem`,`status_code`,`ip`,`user_agent`,`criado_em` FROM `erros_sistema` ORDER BY `criado_em` DESC LIMIT 50");
+  res.json({ erros: rows });
 });
 
 const porta = process.env.PORTA || 3000;

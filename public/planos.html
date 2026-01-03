@@ -42,54 +42,36 @@
     <div class="grid">
       <div class="card plan" aria-label="Plano Mensal">
         <h3>Mensal</h3>
-        <div class="price">R$ 0,01 / mês</div>
+        <div class="price">R$ 297,00 / mês</div>
         <ul>
           <li>Acesso completo</li>
           <li>Renovação mensal</li>
         </ul>
-        <button class="primary" onclick="abrirContratacao('mensal')" aria-label="Contratar plano mensal">Contratar</button>
+        <button class="primary" onclick="irParaPagamento('mensal')" aria-label="Contratar plano mensal">Contratar</button>
       </div>
       <div class="card plan" aria-label="Plano Semestral">
         <h3>Semestral</h3>
-        <div class="price">R$ 0,00 / mês</div>
-        <button onclick="abrirContratacao('semestral')" aria-label="Contratar plano semestral">Contratar</button>
+        <div class="price">R$ 279,00 / mês</div>
+        <ul>
+          <li>Desconto de 6%</li>
+          <li>Cobrado R$ 1.677 a cada 6 meses</li>
+        </ul>
+        <button onclick="irParaPagamento('semestral')" aria-label="Contratar plano semestral">Contratar</button>
       </div>
       <div class="card plan" aria-label="Plano Anual">
         <h3>Anual</h3>
-        <div class="price">R$ 0,00 / mês</div>
-        <button onclick="abrirContratacao('anual')" aria-label="Contratar plano anual">Contratar</button>
+        <div class="price">R$ 247,00 / mês</div>
+        <ul>
+          <li>Desconto de 17%</li>
+          <li>Cobrado R$ 2.964 anualmente</li>
+        </ul>
+        <button onclick="irParaPagamento('anual')" aria-label="Contratar plano anual">Contratar</button>
       </div>
-    </div>
-
-    <div class="card" id="form" style="display:none">
-      <h3>Dados para Contratação</h3>
-      <label>Nome</label>
-      <input id="nome" />
-      <label>E-mail</label>
-      <input id="email" type="email" />
-      <button class="primary" id="btnContratar" onclick="contratar()" aria-label="Confirmar contratação">Prosseguir para PIX</button>
-      <div class="loading" id="loading" role="status" aria-live="polite"><div class="spinner"></div><span>Processando...</span></div>
-      <p id="msg"></p>
     </div>
   </main>
   <script>
-    let planoSelecionado='mensal';
-    function abrirContratacao(cod){planoSelecionado=cod;document.getElementById('form').style.display='block';}
-    async function contratar(){
-      const nome=document.getElementById('nome').value.trim();
-      const email=document.getElementById('email').value.trim();
-      const msg=document.getElementById('msg');
-      const btn=document.getElementById('btnContratar');
-      const loading=document.getElementById('loading');
-      if(!nome||!email){msg.textContent='Preencha nome e e-mail';return}
-      btn.setAttribute('aria-busy','true');btn.disabled=true;loading.style.display='flex';msg.textContent='';
-      const controller=new AbortController();const t=setTimeout(()=>controller.abort(),20000);
-      try{
-        const r=await fetch('/contratar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plano_codigo:planoSelecionado,email,nome}),signal:controller.signal});
-        const j=await r.json();
-        if(r.ok && j.id_externo){localStorage.setItem('assinatura_id',String(j.assinatura_id));localStorage.setItem('pix_id_externo',j.id_externo);localStorage.setItem('email_contratante',email);location.href='/pix.html?id_externo='+j.id_externo;} else {msg.textContent=j.erro||'Falha na contratação'}
-      }catch(e){msg.textContent='Erro de conexão'}
-      clearTimeout(t);btn.removeAttribute('aria-busy');btn.disabled=false;loading.style.display='none';
+    function irParaPagamento(cod){
+        location.href = '/pagamento.html?plano=' + cod;
     }
   </script>
 </body>

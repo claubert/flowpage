@@ -56,49 +56,74 @@
           <label>Login</label>
           <input id="login" />
         </div>
-        <div class="row">
-          <label>Senha</label>
-          <input id="senha" type="password" />
-        </div>
-        <div class="row">
-          <label>Confirmar Senha</label>
-          <input id="senha2" type="password" />
-        </div>
+        <div class="row" style="position:relative">
+        <label>Senha</label>
+        <input id="senha" type="password" />
+        <button type="button" onclick="toggleSenha('senha')" style="position:absolute;right:10px;top:32px;background:none;border:none;width:auto;padding:0;color:#a9b4d9;cursor:pointer">👁️</button>
       </div>
-      <label class="terms"><input type="checkbox" id="aceitar" /> Aceito os <a href="#" style="color:#93c5fd">termos de uso</a> e a <a href="#" style="color:#93c5fd">política de privacidade</a></label>
-      <button onclick="cadastrar()" style="margin-top:10px">Cadastrar</button>
-      <p id="msg"></p>
+      <div class="row" style="position:relative">
+        <label>Confirmar Senha</label>
+        <input id="senha2" type="password" />
+        <button type="button" onclick="toggleSenha('senha2')" style="position:absolute;right:10px;top:32px;background:none;border:none;width:auto;padding:0;color:#a9b4d9;cursor:pointer">👁️</button>
+      </div>
     </div>
-  </main>
-  <script>
-    function validaSenha(s){return s.length>=8 && /[A-Za-z]/.test(s) && /\d/.test(s)}
-    function limpaCPF(v){return (v||'').replace(/\D/g,'')}
-    function validaCPF(c){c=limpaCPF(c);if(!c||c.length!==11||/^([0-9])\1*$/.test(c))return false;let s=0;for(let i=0;i<9;i++)s+=parseInt(c[i])*(10-i);let d1=(s*10)%11;if(d1===10)d1=0;if(d1!==parseInt(c[9]))return false;s=0;for(let i=0;i<10;i++)s+=parseInt(c[i])*(11-i);let d2=(s*10)%11;if(d2===10)d2=0;return d2===parseInt(c[10])}
-    async function cadastrar(){
-      const nome=document.getElementById('nome').value.trim();
-      const cpf=document.getElementById('cpf').value.trim();
-      const telefone=document.getElementById('telefone').value.trim();
-      const email=document.getElementById('email').value.trim();
-      const login=document.getElementById('login').value.trim();
-      const senha=document.getElementById('senha').value;
-      const senha2=document.getElementById('senha2').value;
-      const aceitar=document.getElementById('aceitar').checked;
-      const msg=document.getElementById('msg');
-      if(!nome||!cpf||!telefone||!email||!login||!senha||!senha2||!aceitar){msg.textContent='Preencha todos os campos e aceite os termos';return}
-      if(!validaCPF(cpf)){msg.textContent='CPF inválido';return}
-      if(!validaSenha(senha)){msg.textContent='Senha fraca';return}
-      if(senha!==senha2){msg.textContent='Senhas diferentes';return}
-      const r=await fetch('/cadastro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome_completo:nome,cpf,telefone,email,login,senha,aceitar_termos:aceitar})});
+    <label class="terms"><input type="checkbox" id="aceitar" /> Aceito os <a href="#" style="color:#93c5fd">termos de uso</a> e a <a href="#" style="color:#93c5fd">política de privacidade</a></label>
+    <button id="btnCadastrar" onclick="cadastrar()" style="margin-top:10px">Cadastrar</button>
+    <p id="msg"></p>
+  </div>
+</main>
+<script>
+  function toggleSenha(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password'}
+  function validaSenha(s){return s.length>=8 && /[A-Za-z]/.test(s) && /\d/.test(s)}
+  function limpaCPF(v){return (v||'').replace(/\D/g,'')}
+  function validaCPF(c){c=limpaCPF(c);if(!c||c.length!==11||/^([0-9])\1*$/.test(c))return false;let s=0;for(let i=0;i<9;i++)s+=parseInt(c[i])*(10-i);let d1=(s*10)%11;if(d1===10)d1=0;if(d1!==parseInt(c[9]))return false;s=0;for(let i=0;i<10;i++)s+=parseInt(c[i])*(11-i);let d2=(s*10)%11;if(d2===10)d2=0;return d2===parseInt(c[10])}
+  async function cadastrar(){
+    console.log('Botão cadastrar clicado');
+    const nome=document.getElementById('nome').value.trim();
+    const cpf=document.getElementById('cpf').value.trim();
+    const telefone=document.getElementById('telefone').value.trim();
+    const email=document.getElementById('email').value.trim();
+    const login=document.getElementById('login').value.trim();
+    const senha=document.getElementById('senha').value;
+    const senha2=document.getElementById('senha2').value;
+    const aceitar=document.getElementById('aceitar').checked;
+    const msg=document.getElementById('msg');
+    const btn=document.getElementById('btnCadastrar');
+    
+    msg.textContent='';
+    console.log('Dados capturados:', {nome, cpf, email, login});
+
+    if(!nome||!cpf||!telefone||!email||!login||!senha||!senha2||!aceitar){msg.textContent='Preencha todos os campos e aceite os termos';return}
+    if(!validaCPF(cpf)){msg.textContent='CPF inválido';return}
+    if(!validaSenha(senha)){msg.textContent='Senha fraca';return}
+    if(senha!==senha2){msg.textContent='Senhas diferentes';return}
+
+    btn.disabled=true;
+    btn.textContent='Cadastrando...';
+
+    try {
+      const r=await fetch('/api/cadastro.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome_completo:nome,cpf,telefone,email,login,senha,aceitar_termos:aceitar})});
       const j=await r.json();
+      console.log('Resposta API:', j);
+      
       if(j.usuario_id){
-        const emailContratante = localStorage.getItem('email_contratante');
-        if(emailContratante){
-          await fetch('/cadastro/vincular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailContratante})});
-        }
         msg.textContent='Cadastro realizado. Agora faça login.';
-        setTimeout(()=>{location.href='/login.html'},1000)
-      } else {msg.textContent='Falha no cadastro'}
+        msg.style.color='#10b981';
+        setTimeout(()=>{location.href='/login.html'},1500)
+      } else {
+        msg.textContent='Falha: ' + (j.erro || 'Erro desconhecido');
+        msg.style.color='#ef4444';
+        btn.disabled=false;
+        btn.textContent='Cadastrar';
+      }
+    } catch(e) {
+      console.error('Erro fetch:', e);
+      msg.textContent='Erro de conexão. Tente novamente.';
+      msg.style.color='#ef4444';
+      btn.disabled=false;
+      btn.textContent='Cadastrar';
     }
-  </script>
+  }
+</script>
 </body>
 </html>

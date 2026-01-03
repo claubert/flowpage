@@ -1,0 +1,15 @@
+AddDefaultCharset utf-8
+RewriteEngine On
+RewriteBase /
+Options -Indexes
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+RewriteRule ^painel$ /painel.html [L]
+RewriteRule ^login$ /login.html [L]
+RewriteRule ^cadastro$ /cadastro.html [L]
+RewriteRule ^pagamento$ /pagamento.html [L]
+RewriteRule ^planos$ /planos.html [L]
+RewriteRule ^pix$ /pix.html [L]
+RewriteRule ^confirmacao$ /confirmacao.html [L]
+RewriteRule . /index.html [L]

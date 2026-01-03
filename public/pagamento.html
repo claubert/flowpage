@@ -745,7 +745,7 @@
       
       try {
         // Enviar requisição para o servidor
-        const response = await fetch('/assinar', {
+        const response = await fetch('/api/checkout.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -774,7 +774,7 @@
           window.location.href = '/confirmacao.html?assinatura_id='+data.assinatura_id;
         } else {
           message.className = 'message error';
-          message.innerHTML = `<i class="fas fa-times-circle"></i> Falha na assinatura: ${data.error || 'Erro desconhecido'}`;
+          message.innerHTML = `<i class="fas fa-times-circle"></i> Falha na assinatura: ${data.msg || data.erro || 'Erro desconhecido'}`;
           message.style.display = 'flex';
         }
       } catch (error) {

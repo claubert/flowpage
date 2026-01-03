@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recuperar Senha • Flowhedge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --primary-dark: #0a0f1c; --accent-blue: #2563eb; --text-primary: #f3f4f6; --text-secondary: #9ca3af; --card-bg: rgba(17, 24, 39, 0.85); --gradient-accent: linear-gradient(90deg, #2563eb 0%, #0d9488 100%); }
+    body { font-family: 'Inter', sans-serif; background: var(--primary-dark); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; margin: 0; }
+    
+    .login-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .login-card { background: var(--card-bg); padding: 3rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); max-width: 480px; width: 100%; position: relative; overflow: hidden; }
+    .login-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gradient-accent); }
+    
+    h2 { text-align: center; margin-bottom: 0.5rem; }
+    p.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; }
+    
+    .input-group { margin-bottom: 1.5rem; }
+    .input-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; }
+    .input-field { position: relative; }
+    .input-field i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; }
+    .input-field input { width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(10, 15, 28, 0.7); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 1rem; }
+    
+    button { width: 100%; padding: 1rem; background: var(--gradient-accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; gap: 0.5rem; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
+    
+    .back-link { text-align: center; margin-top: 1.5rem; display: block; color: var(--accent-blue); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    
+    #msg { text-align: center; margin-top: 1rem; min-height: 1.2rem; font-size: 0.9rem; }
+    .success { color: #10b981; } .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <main class="login-container">
+    <div class="login-card">
+      <h2>Recuperar Senha</h2>
+      <p class="subtitle">Informe seu e-mail para receber as instruções de redefinição.</p>
+
+      <form id="recoverForm">
+        <div class="input-group">
+          <label for="email">E-mail Cadastrado</label>
+          <div class="input-field">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="seu@email.com" required />
+          </div>
+        </div>
+
+        <button type="submit" id="btnSubmit">
+          <i class="fas fa-paper-plane"></i> <span>Enviar Instruções</span>
+        </button>
+      </form>
+
+      <div id="msg"></div>
+      <a href="/login.html" class="back-link">Voltar para Login</a>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('recoverForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const btn = document.getElementById('btnSubmit');
+      const msg = document.getElementById('msg');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/api/recuperar_senha.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if (data.sucesso || res.ok) {
+          msg.textContent = data.msg || 'Verifique seu e-mail!';
+          msg.className = 'success';
+          btn.innerHTML = '<i class="fas fa-check"></i> Enviado';
+        } else {
+          throw new Error(data.msg);
+        }
+      } catch (err) {
+        msg.textContent = err.message || 'Erro ao enviar.';
+        msg.className = 'error';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Tentar Novamente';
+      }
+    });
+  </script>
+</body>
+</html>

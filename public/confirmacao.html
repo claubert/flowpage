@@ -14,7 +14,8 @@
     main{max-width:720px;margin:24px auto;padding:0 24px}
     .card{background:#111a2e;border:1px solid #1d2a49;padding:16px;border-radius:10px}
     select,input,button{width:100%;padding:10px;border-radius:8px;border:1px solid #1d2a49;background:#0e1628;color:#e6edff}
-    button{background:#22c55e;border:none;margin-top:10px}
+    button{background:#22c55e;border:none;margin-top:10px;cursor:pointer}
+    button:hover{opacity:0.9}
   </style>
 </head>
 <body>
@@ -32,7 +33,7 @@
       <label>Método</label>
       <select id="metodo"><option value="pix">PIX</option><option value="cartao_credito">Cartão de Crédito</option><option value="cartao_debito">Cartão de Débito</option></select>
       <label>Valor (centavos)</label>
-      <input id="valor" value="29700" />
+      <input id="valor" value="29700" readonly />
       <button onclick="iniciar()">Iniciar Pagamento</button>
       <p id="status"></p>
     </div>
@@ -46,8 +47,15 @@
       assinaturaId=obterAssinatura();
       if(!assinaturaId){document.getElementById('status').textContent='Assinatura não encontrada';return}
       const metodo=document.getElementById('metodo').value;
+      
+      // Correção: Redirecionar para pix.html se for PIX
+      if(metodo === 'pix'){
+        location.href = '/pix.html?assinatura_id=' + assinaturaId;
+        return;
+      }
+
       const valor=Number(document.getElementById('valor').value||0);
-      const r=await fetch('/pagamento/iniciar',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({assinatura_id:assinaturaId,metodo,valor_centavos:valor})});
+      const r=await fetch('/api/pagamento_pix.php',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({assinatura_id:assinaturaId,metodo,valor_centavos:valor})});
       const j=await r.json();
       if(j.id_externo){externo=j.id_externo;document.getElementById('status').textContent='Pagamento iniciado. Aguardando confirmação...';iniciarPoll();} else {document.getElementById('status').textContent='Falha ao iniciar pagamento'}
     }
@@ -55,7 +63,7 @@
       const token=localStorage.getItem('token');
       clearInterval(poll);
       poll=setInterval(async()=>{
-        const r=await fetch('/pagamento/status?assinatura_id='+assinaturaId,{headers:{'Authorization':'Bearer '+token}});
+        const r=await fetch('/api/pagamento_status.php?assinatura_id='+assinaturaId,{headers:{'Authorization':'Bearer '+token}});
         const j=await r.json();
         const p=j.pagamento;
         if(!p){return}

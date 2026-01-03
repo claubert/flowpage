@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body{font-family:Inter,system-ui,Arial,sans-serif;margin:0;padding:0;background:#0b1220;color:#f4f7ff}
     header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#0e1628;border-bottom:1px solid #18233a}
@@ -14,7 +15,8 @@
     main{max-width:720px;margin:24px auto;padding:0 24px}
     .card{background:#111a2e;border:1px solid #1d2a49;padding:16px;border-radius:10px}
     input,button{width:100%;padding:10px;border-radius:8px;border:1px solid #1d2a49;background:#0e1628;color:#e6edff}
-    button.primary{background:#22c55e;border:none;margin-top:10px}
+    button.primary{background:#22c55e;border:none;margin-top:10px;cursor:pointer}
+    button.primary:hover{opacity:0.9}
     code{word-break:break-all}
   </style>
 </head>
@@ -31,33 +33,152 @@
     <div class="card">
       <h2>Pagamento via PIX</h2>
       <p>Copie o código PIX abaixo e finalize o pagamento:</p>
-      <code id="pix"></code>
+      <div id="qrcode-img" style="display:flex;justify-content:center;margin-bottom:20px;background:white;padding:10px;border-radius:8px"></div>
+      <code id="pix">Carregando código PIX...</code>
       <button class="primary" onclick="copiar()" aria-label="Copiar código PIX">Copiar Código</button>
       <p id="status"></p>
-      <button onclick="marcarPago()" aria-label="Confirmar pagamento (simulação)">Marcar como Pago (simulação)</button>
+      <button onclick="marcarPago()" aria-label="Confirmar pagamento (simulação)" style="margin-top:10px">Marcar como Pago (simulação)</button>
     </div>
   </main>
   <script>
     const u=new URLSearchParams(location.search);
     const idExterno=u.get('id_externo')||localStorage.getItem('pix_id_externo')||'';
+    const assinaturaId=u.get('assinatura_id')||localStorage.getItem('assinatura_id');
+    let pollInterval = null; // Mantido para compatibilidade
+    let isPolling = false;   // Controle de recursão
+    
     async function carregar(){
-      const r=await fetch('/pagamento/status?id_externo='+idExterno);
-      const j=await r.json();
-      document.getElementById('pix').textContent='PIX:FLOWHEDGE:'+idExterno;
-      const p=j.pagamento;
-      const st=document.getElementById('status');
-      if(!p){st.textContent='Aguardando início...';return}
-      if(p.status==='pago'){st.textContent='Pagamento confirmado! Vá para cadastro/login.';setTimeout(()=>{location.href='/cadastro.html'},1500)}
-      else if(p.status==='falhou'){st.textContent='Pagamento falhou. Tente novamente.'}
-      else {st.textContent='Aguardando confirmação...';}
+      const token=localStorage.getItem('token');
+      if(!token){document.getElementById('status').textContent='Faça login';return}
+      if(!assinaturaId){document.getElementById('status').textContent='Assinatura não encontrada';return}
+      
+      try {
+          const r=await fetch('/api/pagamento_pix.php',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({assinatura_id:assinaturaId})});
+          
+          // Lê como texto primeiro para diagnosticar erros HTML
+          const text = await r.text();
+          let j;
+          try {
+             j = JSON.parse(text);
+          } catch(e) {
+             console.error("Erro JSON:", text);
+             document.getElementById('status').textContent = 'Erro interno no servidor de pagamento.';
+             return;
+          }
+          
+          if(j.erro){
+             document.getElementById('status').textContent = 'Erro: ' + (j.msg || j.erro);
+             return;
+          }
+
+          document.getElementById('pix').textContent = j.copia_cola;
+          
+          document.getElementById('qrcode-img').innerHTML = '';
+          new QRCode(document.getElementById("qrcode-img"), {
+            text: j.qr_code,
+            width: 200,
+            height: 200,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+          });
+
+          iniciarPoll();
+      } catch(e) {
+          console.error(e);
+          document.getElementById('status').textContent = 'Erro de conexão';
+      }
     }
+
     async function marcarPago(){
-      const r=await fetch('/pix/confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_externo:idExterno})});
-      await carregar();
+      const token=localStorage.getItem('token');
+      const btn = document.querySelector('button[onclick="marcarPago()"]');
+      const originalText = btn.innerText;
+      
+      btn.innerText = 'Processando...';
+      btn.disabled = true;
+
+      try {
+        await fetch('/api/pagamento_confirmar.php',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({
+                id_externo: idExterno,
+                assinatura_id: assinaturaId
+            })
+        });
+        document.getElementById('status').textContent = 'Confirmação enviada. Aguardando...';
+      } catch (e) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        alert('Erro ao tentar confirmar pagamento.');
+      }
     }
+
     function copiar(){
       navigator.clipboard.writeText(document.getElementById('pix').textContent);
+      alert('Código copiado!');
     }
+
+    async function iniciarPoll(){
+      // Limpa polling anterior se existir
+      if(pollInterval) clearInterval(pollInterval);
+      isPolling = true;
+      fazerPoll();
+    }
+
+    async function fazerPoll() {
+        if (!isPolling) return;
+        
+        const token = localStorage.getItem('token');
+        try {
+            // Adicionado timestamp para evitar cache
+            const r=await fetch('/api/pagamento_status.php?assinatura_id='+assinaturaId + '&t=' + new Date().getTime(),{
+                headers:{'Authorization':'Bearer '+token}
+            });
+            const j=await r.json();
+            const p=j.pagamento;
+            
+            // Se resposta vazia, tenta de novo
+            if(!p){
+                setTimeout(fazerPoll, 2000);
+                return;
+            }
+            
+            if(p.status==='pago' || p.status==='ativo'){
+                document.getElementById('status').textContent='Pagamento confirmado! Redirecionando...';
+                document.getElementById('status').style.color = '#22c55e';
+                isPolling = false; // Para o loop
+                setTimeout(() => { location.href='/painel.html'; }, 1000);
+                return;
+            }
+            else if(p.status==='falhou'){
+                document.getElementById('status').textContent='Pagamento falhou.';
+                document.getElementById('status').style.color = '#ef4444';
+                isPolling = false; // Para o loop
+                return;
+            } 
+            else {
+                // Atualiza UI sem sobrescrever mensagem manual de "Confirmação enviada"
+                let text = document.getElementById('status').textContent;
+                if(text.includes('Aguardando confirmação')) {
+                    if(text.endsWith('...')) text = 'Aguardando confirmação';
+                    else text += '.';
+                    document.getElementById('status').textContent = text;
+                } else if (!text.includes('Enviada')) {
+                    document.getElementById('status').textContent='Aguardando confirmação...';
+                }
+            }
+        } catch(e) {
+            console.error('Erro no poll', e);
+        }
+        
+        // Agenda próxima execução apenas se ainda estiver rodando
+        if (isPolling) {
+            setTimeout(fazerPoll, 2000);
+        }
+    }
+    
     carregar();
   </script>
 </body>

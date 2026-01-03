@@ -691,7 +691,7 @@
               <input type="checkbox" id="remember">
               <span>Lembrar-me</span>
             </label>
-            <a href="#" class="forgot-password">Esqueceu a senha?</a>
+            <a href="/recuperar_senha.html" class="forgot-password">Esqueceu a senha?</a>
           </div>
 
           <button type="submit" class="login-button" id="loginButton">
@@ -717,7 +717,7 @@
 
         <div class="register-link">
           Não tem uma conta? 
-          <a href="/pagamento.html">Comece agora mesmo</a>
+          <a href="/cadastro.html">Comece agora mesmo</a>
         </div>
 
         <div id="msg"></div>
@@ -868,7 +868,7 @@
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const response = await fetch('/login', {
+        const response = await fetch('/api/login.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -915,22 +915,7 @@
       }
     });
     
-    // Social login buttons
-    document.querySelectorAll('.social-button').forEach(button => {
-      button.addEventListener('click', function() {
-        const provider = this.classList.contains('google') ? 'Google' : 'GitHub';
-        const msg = document.getElementById('msg');
-        
-        msg.textContent = `Redirecionando para login com ${provider}...`;
-        msg.className = 'msg-success';
-        
-        // Simulate social login redirect
-        setTimeout(() => {
-          msg.textContent = `Funcionalidade ${provider} em desenvolvimento`;
-          msg.className = 'msg-error';
-        }, 1500);
-      });
-    });
+    // Social login desabilitado no momento (sem ação)
     
     // Fill remembered email if exists
     window.addEventListener('load', function() {

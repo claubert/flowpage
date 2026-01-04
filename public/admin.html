@@ -294,25 +294,43 @@
   <script>
     // --- Navigation Logic ---
     function navigate(sectionId) {
-        // Update UI
-        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
-        document.getElementById(sectionId).classList.add('active');
+        // 1. Remove classe ativa de todas as seções
+        document.querySelectorAll('.section').forEach(el => {
+            el.style.display = 'none'; // Força hide
+            el.classList.remove('active');
+        });
         
+        // 2. Ativa a seção alvo
+        const target = document.getElementById(sectionId);
+        if(target) {
+            target.style.display = 'block'; // Força show
+            setTimeout(() => target.classList.add('active'), 10); // Permite animação
+        }
+        
+        // 3. Atualiza menu lateral
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        
+        // Encontra o link clicado (ou busca pelo href se for chamada manual)
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        } else {
+            // Fallback para destacar menu correto na carga inicial
+            const link = document.querySelector(`.nav-item[onclick="navigate('${sectionId}')"]`);
+            if(link) link.classList.add('active');
+        }
 
-        // Load Data
+        // 4. Carrega dados específicos
         if (sectionId === 'users') loadUsers();
         if (sectionId === 'subscriptions') loadSubs();
         
-        // Update Title
+        // 5. Atualiza Título
         const titles = {
             'dashboard': 'Visão Geral',
             'users': 'Usuários',
             'subscriptions': 'Assinaturas',
             'reports': 'Relatórios'
         };
-        document.getElementById('page-title').textContent = titles[sectionId];
+        document.getElementById('page-title').textContent = titles[sectionId] || 'Admin';
     }
 
     // --- Users Logic ---
@@ -427,7 +445,8 @@
 
         } catch (e) {
             console.error(e);
-            alert('Erro ao carregar dados do painel.');
+            // alert('Erro ao carregar dados do painel.'); // Removido alerta intrusivo
+            document.getElementById('total-users').innerHTML = '<span style="color:red; font-size:1rem;">Erro de conexão</span>';
         }
     }
 

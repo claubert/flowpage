@@ -8,14 +8,24 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 
 // 1. Autenticação Básica
-$user_id = auth_check(); // Retorna ID ou mata o script com 401
+// $user_id = auth_check(); // Removendo auth_check global que não lê Bearer
 
-// 2. Verificação de Super Admin (Hardcoded + Banco de Dados)
-$stmt = $mysqli->prepare("SELECT email, nome FROM usuarios WHERE id = ? LIMIT 1");
-$stmt->bind_param("i", $user_id);
+$token = get_bearer_token();
+if (!$token) json_out(['erro' => 'token_ausente'], 401);
+
+$stmt = $mysqli->prepare('SELECT u.id, u.email FROM sessoes s JOIN usuarios u ON u.id = s.usuario_id WHERE s.token = ? AND s.expira_em > NOW() LIMIT 1');
+$stmt->bind_param('s', $token);
 $stmt->execute();
 $res = $stmt->get_result();
 $user_data = $res->fetch_assoc();
+$user_id = $user_data['id'] ?? 0;
+
+// 2. Verificação de Super Admin (Hardcoded + Banco de Dados)
+// $stmt = $mysqli->prepare("SELECT email, nome FROM usuarios WHERE id = ? LIMIT 1");
+// $stmt->bind_param("i", $user_id);
+// $stmt->execute();
+// $res = $stmt->get_result();
+// $user_data = $res->fetch_assoc();
 
 // Lista de e-mails permitidos (Whitelist)
 $admin_whitelist = ['claubert.lopez@gmail.com'];

@@ -98,6 +98,20 @@
       margin-bottom: 2rem;
     }
 
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container-box {
+      position: relative;
+      height: 300px; /* Altura fixa para garantir renderização correta */
+      width: 100%;
+    }
+
     .card {
       background: var(--card-bg);
       padding: 1.5rem;
@@ -209,11 +223,15 @@
         <div class="charts-grid">
           <div class="card">
             <h3 style="margin-bottom: 1rem;">Crescimento de Usuários</h3>
-            <canvas id="growthChart"></canvas>
+            <div class="chart-container-box">
+                <canvas id="growthChart"></canvas>
+            </div>
           </div>
           <div class="card">
             <h3 style="margin-bottom: 1rem;">Distribuição de Planos</h3>
-            <canvas id="plansChart"></canvas>
+            <div class="chart-container-box">
+                <canvas id="plansChart"></canvas>
+            </div>
           </div>
         </div>
     </div>
@@ -482,6 +500,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -504,6 +523,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: { 
                     legend: { position: 'bottom', labels: { color: '#94a3b8' } } 
                 }

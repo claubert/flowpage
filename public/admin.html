@@ -127,8 +127,8 @@
     .trend-down { color: var(--accent-red); }
 
     /* SPA Content Sections */
-    .section { display: none; animation: fadeIn 0.3s; }
-    .section.active { display: block; }
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Tables Styles */
@@ -296,15 +296,15 @@
     function navigate(sectionId) {
         // 1. Remove classe ativa de todas as seções
         document.querySelectorAll('.section').forEach(el => {
-            el.style.display = 'none'; // Força hide
             el.classList.remove('active');
+            // Força repaint para evitar glitch visual
+            void el.offsetWidth;
         });
         
         // 2. Ativa a seção alvo
         const target = document.getElementById(sectionId);
         if(target) {
-            target.style.display = 'block'; // Força show
-            setTimeout(() => target.classList.add('active'), 10); // Permite animação
+            target.classList.add('active');
         }
         
         // 3. Atualiza menu lateral

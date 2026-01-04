@@ -184,6 +184,15 @@
         <h1 style="font-size: 1.5rem;" id="page-title">Visão Geral</h1>
         <p style="color: var(--text-secondary);">Painel Administrativo FlowHedge</p>
       </div>
+      
+      <!-- Date Filter -->
+      <div id="date-filter" style="display: flex; gap: 0.5rem; align-items: center; background: var(--secondary-dark); padding: 0.5rem; border-radius: 8px;">
+          <input type="date" id="start-date" class="date-input" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.3rem; border-radius: 4px;">
+          <span style="color: var(--text-secondary);">até</span>
+          <input type="date" id="end-date" class="date-input" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.3rem; border-radius: 4px;">
+          <button onclick="initDashboard()" class="btn-page" style="padding: 0.3rem 0.8rem;"><i class="fas fa-filter"></i></button>
+      </div>
+
       <div class="user-info">
         <div style="text-align: right;">
           <div style="font-weight: 600;">Claubert Lopez</div>
@@ -439,6 +448,10 @@
     }
 
     // --- Init ---
+    // Set default dates
+    document.getElementById('start-date').valueAsDate = new Date(new Date().setDate(new Date().getDate() - 30));
+    document.getElementById('end-date').valueAsDate = new Date();
+
     // Auth Check & Data Loading
     async function initDashboard() {
         const token = localStorage.getItem('token');
@@ -447,8 +460,11 @@
             return;
         }
 
+        const start = document.getElementById('start-date').value;
+        const end = document.getElementById('end-date').value;
+
         try {
-            const res = await fetch('/api/admin_stats.php', {
+            const res = await fetch(`/api/admin_stats.php?start_date=${start}&end_date=${end}`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
 

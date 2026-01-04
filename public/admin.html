@@ -126,52 +126,22 @@
     .trend-up { color: var(--accent-green); }
     .trend-down { color: var(--accent-red); }
 
-    /* Charts Grid */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
+    /* SPA Content Sections */
+    .section { display: none; animation: fadeIn 0.3s; }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Table */
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th {
-      background: rgba(0,0,0,0.2);
-      padding: 1rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    td {
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
-    .bg-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
-    .bg-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main-content { margin-left: 0; }
-      .charts-grid { grid-template-columns: 1fr; }
-    }
+    /* Tables Styles */
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .data-table th, .data-table td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left; }
+    .data-table th { background: rgba(0,0,0,0.2); color: var(--text-secondary); }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .pagination { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+    .btn-page { padding: 0.5rem 1rem; background: var(--secondary-dark); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); cursor: pointer; border-radius: 4px; }
+    .btn-page:hover { background: var(--accent-blue); }
+    
+    .search-bar { width: 100%; padding: 0.8rem; background: var(--secondary-dark); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 6px; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -182,10 +152,10 @@
       <i class="fas fa-shield-alt"></i> Admin
     </div>
     <nav>
-      <a href="#" class="nav-item active"><i class="fas fa-home"></i> Dashboard</a>
-      <a href="#" class="nav-item"><i class="fas fa-users"></i> Usuários</a>
-      <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Assinaturas</a>
-      <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Relatórios</a>
+      <a href="#" class="nav-item active" onclick="navigate('dashboard')"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="#" class="nav-item" onclick="navigate('users')"><i class="fas fa-users"></i> Usuários</a>
+      <a href="#" class="nav-item" onclick="navigate('subscriptions')"><i class="fas fa-credit-card"></i> Assinaturas</a>
+      <a href="#" class="nav-item" onclick="navigate('reports')"><i class="fas fa-chart-line"></i> Relatórios</a>
       <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
         <a href="/" class="nav-item"><i class="fas fa-external-link-alt"></i> Ver Site</a>
         <a href="#" onclick="logout()" class="nav-item" style="color: var(--accent-red);"><i class="fas fa-sign-out-alt"></i> Sair</a>
@@ -197,79 +167,242 @@
   <main class="main-content">
     <header class="header">
       <div>
-        <h1 style="font-size: 1.5rem;">Visão Geral</h1>
-        <p style="color: var(--text-secondary);">Bem-vindo de volta, Administrador.</p>
+        <h1 style="font-size: 1.5rem;" id="page-title">Visão Geral</h1>
+        <p style="color: var(--text-secondary);">Painel Administrativo FlowHedge</p>
       </div>
       <div class="user-info">
         <div style="text-align: right;">
           <div style="font-weight: 600;">Claubert Lopez</div>
           <div style="font-size: 0.8rem; color: var(--text-secondary);">Super Admin</div>
         </div>
-        <div style="width: 40px; height: 40px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-            CL
-        </div>
+        <div style="width: 40px; height: 40px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center;">CL</div>
       </div>
     </header>
 
-    <!-- Metrics -->
-    <div class="metrics-grid">
-      <div class="card">
-        <div class="metric-title">Usuários Totais</div>
-        <div class="metric-value" id="total-users">-</div>
-        <div class="metric-trend trend-up"><i class="fas fa-user-plus"></i> <span id="active-users">-</span> ativos</div>
-      </div>
-      <div class="card">
-        <div class="metric-title">Assinaturas Ativas</div>
-        <div class="metric-value" id="active-subs">-</div>
-        <div class="metric-trend trend-up"><i class="fas fa-check-circle"></i> Pagamento em dia</div>
-      </div>
-      <div class="card">
-        <div class="metric-title">Em Atraso</div>
-        <div class="metric-value" id="overdue-subs" style="color: var(--accent-red);">-</div>
-        <div class="metric-trend trend-down"><i class="fas fa-exclamation-triangle"></i> Requer atenção</div>
-      </div>
-      <div class="card">
-        <div class="metric-title">Receita Total (Est.)</div>
-        <div class="metric-value" id="total-revenue">-</div>
-        <div class="metric-trend"><i class="fas fa-dollar-sign"></i> Bruta</div>
-      </div>
+    <!-- SECTION: DASHBOARD -->
+    <div id="dashboard" class="section active">
+        <!-- Metrics -->
+        <div class="metrics-grid">
+          <div class="card">
+            <div class="metric-title">Usuários Totais</div>
+            <div class="metric-value" id="total-users">-</div>
+            <div class="metric-trend trend-up"><i class="fas fa-user-plus"></i> <span id="active-users">-</span> ativos</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Assinaturas Ativas</div>
+            <div class="metric-value" id="active-subs">-</div>
+            <div class="metric-trend trend-up"><i class="fas fa-check-circle"></i> Pagamento em dia</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Em Atraso</div>
+            <div class="metric-value" id="overdue-subs" style="color: var(--accent-red);">-</div>
+            <div class="metric-trend trend-down"><i class="fas fa-exclamation-triangle"></i> Requer atenção</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Receita Total (Est.)</div>
+            <div class="metric-value" id="total-revenue">-</div>
+            <div class="metric-trend"><i class="fas fa-dollar-sign"></i> Bruta</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="card">
+            <h3 style="margin-bottom: 1rem;">Crescimento de Usuários</h3>
+            <canvas id="growthChart"></canvas>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom: 1rem;">Distribuição de Planos</h3>
+            <canvas id="plansChart"></canvas>
+          </div>
+        </div>
     </div>
 
-    <!-- Charts -->
-    <div class="charts-grid">
-      <div class="card">
-        <h3 style="margin-bottom: 1rem;">Crescimento de Usuários</h3>
-        <canvas id="growthChart"></canvas>
-      </div>
-      <div class="card">
-        <h3 style="margin-bottom: 1rem;">Distribuição de Planos</h3>
-        <canvas id="plansChart"></canvas>
-      </div>
+    <!-- SECTION: USERS -->
+    <div id="users" class="section">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3>Gerenciar Usuários</h3>
+                <button onclick="loadUsers()" class="btn-page"><i class="fas fa-sync"></i> Atualizar</button>
+            </div>
+            <input type="text" id="user-search" class="search-bar" placeholder="Buscar por nome, email ou CPF..." onkeyup="debounceSearch()">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list-body">
+                        <tr><td colspan="6" style="text-align:center">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="users-pagination"></div>
+        </div>
     </div>
 
-    <!-- Recent Users -->
-    <div class="card">
-      <h3 style="margin-bottom: 1rem;">Últimos Cadastros</h3>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Email</th>
-              <th>Data Cadastro</th>
-              <th>Ação</th>
-            </tr>
-          </thead>
-          <tbody id="users-table">
-            <tr><td colspan="5" style="text-align: center;">Carregando...</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- SECTION: SUBSCRIPTIONS -->
+    <div id="subscriptions" class="section">
+        <div class="card">
+            <h3>Assinaturas Recentes</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuário</th>
+                            <th>Plano</th>
+                            <th>Status</th>
+                            <th>Valor</th>
+                            <th>Vencimento</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subs-list-body">
+                        <tr><td colspan="6" style="text-align:center">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <!-- SECTION: REPORTS -->
+    <div id="reports" class="section">
+        <div class="card" style="max-width: 600px; margin: 0 auto; text-align: center; padding: 3rem;">
+            <i class="fas fa-file-csv" style="font-size: 3rem; color: var(--accent-green); margin-bottom: 1rem;"></i>
+            <h3>Exportar Relatórios</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Baixe os dados completos em formato CSV para análise externa.</p>
+            
+            <div style="display: grid; gap: 1rem;">
+                <button onclick="window.open('/api/admin_subscriptions.php?action=report')" class="btn-page" style="padding: 1rem;">
+                    <i class="fas fa-download"></i> Relatório de Assinaturas (CSV)
+                </button>
+                <button class="btn-page" style="padding: 1rem; opacity: 0.5; cursor: not-allowed;">
+                    <i class="fas fa-download"></i> Relatório Financeiro (Em breve)
+                </button>
+            </div>
+        </div>
+    </div>
+
   </main>
 
   <script>
+    // --- Navigation Logic ---
+    function navigate(sectionId) {
+        // Update UI
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Load Data
+        if (sectionId === 'users') loadUsers();
+        if (sectionId === 'subscriptions') loadSubs();
+        
+        // Update Title
+        const titles = {
+            'dashboard': 'Visão Geral',
+            'users': 'Usuários',
+            'subscriptions': 'Assinaturas',
+            'reports': 'Relatórios'
+        };
+        document.getElementById('page-title').textContent = titles[sectionId];
+    }
+
+    // --- Users Logic ---
+    let currentPage = 1;
+    let searchTimer;
+
+    function debounceSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { currentPage=1; loadUsers(); }, 500);
+    }
+
+    async function loadUsers() {
+        const search = document.getElementById('user-search').value;
+        const token = localStorage.getItem('token');
+        
+        try {
+            const res = await fetch(`/api/admin_users.php?action=list&page=${currentPage}&search=${search}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            
+            const tbody = document.getElementById('users-list-body');
+            tbody.innerHTML = data.data.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.nome}</td>
+                    <td>${u.email}</td>
+                    <td>
+                        <span class="status-badge ${u.ativo == 1 ? 'bg-green' : 'bg-red'}">
+                            ${u.ativo == 1 ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td>${new Date(u.criado_em).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="toggleUser(${u.id}, ${u.ativo})" class="btn-page" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">
+                            ${u.ativo == 1 ? 'Bloquear' : 'Ativar'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Pagination
+            document.getElementById('users-pagination').innerHTML = `
+                <button class="btn-page" ${data.meta.page <= 1 ? 'disabled' : ''} onclick="changePage(-1)">Anterior</button>
+                <span style="padding: 0.5rem;">Página ${data.meta.page} de ${data.meta.pages}</span>
+                <button class="btn-page" ${data.meta.page >= data.meta.pages ? 'disabled' : ''} onclick="changePage(1)">Próxima</button>
+            `;
+            
+        } catch (e) { console.error(e); }
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        loadUsers();
+    }
+
+    async function toggleUser(id, currentStatus) {
+        if(!confirm('Tem certeza que deseja alterar o status deste usuário?')) return;
+        const token = localStorage.getItem('token');
+        await fetch('/api/admin_users.php?action=toggle_status', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ativo: !currentStatus })
+        });
+        loadUsers();
+    }
+
+    // --- Subscriptions Logic ---
+    async function loadSubs() {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('/api/admin_subscriptions.php?action=list', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            
+            document.getElementById('subs-list-body').innerHTML = data.data.map(s => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.usuario}</td>
+                    <td>${s.plano}</td>
+                    <td><span class="status-badge ${s.status === 'ativa' ? 'bg-green' : 'bg-red'}">${s.status}</span></td>
+                    <td>R$ ${(s.valor_mensal/100).toFixed(2)}</td>
+                    <td>${s.fim_em ? new Date(s.fim_em).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `).join('');
+        } catch(e) { console.error(e); }
+    }
+
+    // --- Init ---
     // Auth Check & Data Loading
     async function initDashboard() {
         const token = localStorage.getItem('token');
@@ -307,18 +440,6 @@
         
         const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
         document.getElementById('total-revenue').textContent = formatter.format(data.receita_total / 100);
-
-        // Table
-        const tbody = document.getElementById('users-table');
-        tbody.innerHTML = data.ultimos_usuarios.map(u => `
-            <tr>
-                <td>#${u.id}</td>
-                <td>${u.nome}</td>
-                <td>${u.email}</td>
-                <td>${new Date(u.criado_em).toLocaleDateString()}</td>
-                <td><button style="background:none; border:none; color: var(--accent-blue); cursor:pointer;">Detalhes</button></td>
-            </tr>
-        `).join('');
 
         // Charts
         renderCharts(data);
@@ -377,6 +498,7 @@
     }
 
     initDashboard();
+
   </script>
 </body>
 </html>

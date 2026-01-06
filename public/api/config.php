@@ -22,3 +22,6 @@ define('DB_PORT', 3306);
 define('MP_ACCESS_TOKEN', 'APP_USR-8311603210086825-050614-b253f09af585e1b2cf69e928c3ebe9a5-61220601');
 define('MP_PUBLIC_KEY', 'APP_USR-2a8aa4c8-0723-4589-86a7-6d1dc2f7ae92');
 define('MP_CLIENT_ID', '8311603210086825');
+
+// N8N Webhook Config
+define('N8N_WEBHOOK_URL', 'https://n8n.flowhedge.com.br/webhook-test/pagamento-aprovado');

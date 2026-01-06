@@ -79,6 +79,29 @@ if ($status === 'approved') {
         $stmt->execute();
 
         log_mp("Assinatura $assinatura_id ATIVADA com sucesso!");
+
+        // 4. Notificar N8N
+        if (defined('N8N_WEBHOOK_URL') && N8N_WEBHOOK_URL) {
+            $n8n_data = [
+                'event' => 'payment_approved',
+                'assinatura_id' => $assinatura_id,
+                'payment_id' => $payment_id,
+                'valor' => $valor,
+                'status' => 'approved',
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+
+            $ch_n8n = curl_init(N8N_WEBHOOK_URL);
+            curl_setopt($ch_n8n, CURLOPT_POST, 1);
+            curl_setopt($ch_n8n, CURLOPT_POSTFIELDS, json_encode($n8n_data));
+            curl_setopt($ch_n8n, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch_n8n, CURLOPT_RETURNTRANSFER, true);
+            $resp_n8n = curl_exec($ch_n8n);
+            curl_close($ch_n8n);
+            
+            log_mp("N8N notificado. Resposta: " . substr($resp_n8n, 0, 100));
+        }
+
     } else {
         log_mp("ERRO: External Reference inválido ($external_ref)");
     }

@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.2-apache-bullseye
 
 # Instalar extensões necessárias (mysqli para banco, curl, etc)
 RUN docker-php-ext-install mysqli pdo pdo_mysql

@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Servidor Web (PHP + Apache)
   web:
-    image: php:8.2-apache
+    build: .
     container_name: flowhedge_web
     restart: always
     volumes:

@@ -27,6 +27,30 @@ services:
       - "traefik.http.routers.flowhedge-web.tls.certresolver=myresolver"
       - "traefik.http.services.flowhedge-web.loadbalancer.server.port=80"
 
+  # Aplicação Python (Django)
+  app_python:
+    build:
+      context: ./flowhedge
+      dockerfile: Dockerfile.prod
+    container_name: flowhedge_app
+    restart: always
+    environment:
+      - DATABASE_URL=mysql://flowhedge:flowhedge_secret_pass@db:3306/flowhedge
+      - SECRET_KEY=sua_chave_secreta_super_segura_aqui
+      - DEBUG=False
+      - ALLOWED_HOSTS=app.flowhedge.com.br,localhost
+    depends_on:
+      - db
+    networks:
+      - default
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flowhedge-app.rule=Host(`app.flowhedge.com.br`)"
+      - "traefik.http.routers.flowhedge-app.entrypoints=web,websecure"
+      - "traefik.http.routers.flowhedge-app.tls.certresolver=myresolver"
+      - "traefik.http.services.flowhedge-app.loadbalancer.server.port=8000"
+
   # Banco de Dados (MySQL)
   db:
     image: mysql:5.7
